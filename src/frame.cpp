@@ -166,7 +166,7 @@ void Frame::init()
 			}
 			{
 				wxRibbonPanel *panel = new wxRibbonPanel(page, wxID_ANY, "Criticality");
-				_criticalitySlider = new wxSlider(panel, wxID_ANY, LogData::INFO, LogData::UNKNWON, LogData::FATAL);
+				_criticalitySlider = new wxSlider(panel, wxID_ANY, LogData::LOG_INFO, LogData::LOG_UNKNWON, LogData::LOG_FATAL);
 				_criticalitySlider->SetMinSize(wxSize(128, -1));
 				_criticalityText = new wxStaticText(panel, wxID_ANY, "INFO", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL);
 				wxSizer* szr = new wxBoxSizer(wxVERTICAL);
@@ -258,33 +258,33 @@ void Frame::Updated(LogData& data)
 		{
 			wxString str;
 			str << data.Count() << " entries ";
-			if(data.CriticalityCounts()[LogData::FATAL]>0)
+			if(data.CriticalityCounts()[LogData::LOG_FATAL]>0)
 			{
-				str << " - " << data.CriticalityCounts()[LogData::FATAL] << " fatal(s) ";
+				str << " - " << data.CriticalityCounts()[LogData::LOG_FATAL] << " fatal(s) ";
 			}
-			if(data.CriticalityCounts()[LogData::CRITICAL]>0)
+			if(data.CriticalityCounts()[LogData::LOG_CRITICAL]>0)
 			{
-				str << " - " << data.CriticalityCounts()[LogData::CRITICAL] << " critical(s) ";
+				str << " - " << data.CriticalityCounts()[LogData::LOG_CRITICAL] << " critical(s) ";
 			}
-			if(data.CriticalityCounts()[LogData::ERROR]>0)
+			if(data.CriticalityCounts()[LogData::LOG_ERROR]>0)
 			{
-				str << " - " << data.CriticalityCounts()[LogData::ERROR] << " error(s) ";
+				str << " - " << data.CriticalityCounts()[LogData::LOG_ERROR] << " error(s) ";
 			}
-			if(data.CriticalityCounts()[LogData::WARNING]>0)
+			if(data.CriticalityCounts()[LogData::LOG_WARNING]>0)
 			{
-				str << " - " << data.CriticalityCounts()[LogData::WARNING] << " warning(s) ";
+				str << " - " << data.CriticalityCounts()[LogData::LOG_WARNING] << " warning(s) ";
 			}
-			if(data.CriticalityCounts()[LogData::INFO]>0)
+			if(data.CriticalityCounts()[LogData::LOG_INFO]>0)
 			{
-				str << " - " << data.CriticalityCounts()[LogData::INFO] << " info(s) ";
+				str << " - " << data.CriticalityCounts()[LogData::LOG_INFO] << " info(s) ";
 			}
-			if(data.CriticalityCounts()[LogData::DEBUG]>0)
+			if(data.CriticalityCounts()[LogData::LOG_DEBUG]>0)
 			{
-				str << " - " << data.CriticalityCounts()[LogData::DEBUG] << " debug(s) ";
+				str << " - " << data.CriticalityCounts()[LogData::LOG_DEBUG] << " debug(s) ";
 			}
-			if(data.CriticalityCounts()[LogData::TRACE]>0)
+			if(data.CriticalityCounts()[LogData::LOG_TRACE]>0)
 			{
-				str << " - " << data.CriticalityCounts()[LogData::TRACE] << " trace(s) ";
+				str << " - " << data.CriticalityCounts()[LogData::LOG_TRACE] << " trace(s) ";
 			}
 			_status->SetStatusText(str);
 		}

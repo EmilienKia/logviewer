@@ -29,7 +29,7 @@
 
 class Frame;
 
-class LogData;
+struct LogData;
 class LogListModel;
 
 
@@ -62,16 +62,16 @@ struct LogData
 {
 	enum CRITICALITY_LEVEL
 	{
-		UNKNWON,
-		TRACE,
-		DEBUG,
-		INFO,
-		WARNING,
-		ERROR,
-		CRITICAL,
-		FATAL,
+		LOG_UNKNWON,
+		LOG_TRACE,
+		LOG_DEBUG,
+		LOG_INFO,
+		LOG_WARNING,
+		LOG_ERROR,
+		LOG_CRITICAL,
+		LOG_FATAL,
 
-		CRITICALITY_COUNT
+		LOG_CRITICALITY_COUNT
 	};
 
 	struct Entry
@@ -112,7 +112,7 @@ struct LogData
 
 
 	size_t Count()const {return _entries.size();}
-	const std::array<size_t,CRITICALITY_COUNT>& CriticalityCounts()const {return _criticalityCounts;}
+	const std::array<size_t,LOG_CRITICALITY_COUNT>& CriticalityCounts()const {return _criticalityCounts;}
 	const wxDateTime& BeginDate()const {return _beginDate;}
 	const wxDateTime& EndDate()const {return _endDate;}
 
@@ -122,7 +122,7 @@ struct LogData
 	wxStringCache _threads, _loggers, _sources;
 	std::vector<Entry> _entries;
 
-	std::array<size_t,CRITICALITY_COUNT> _criticalityCounts;
+	std::array<size_t,LOG_CRITICALITY_COUNT> _criticalityCounts;
 	wxDateTime _beginDate, _endDate;
 
 	wxString _tempExtra;
@@ -179,7 +179,7 @@ protected:
 	LogData& _logData;
 
 	bool _filter = false;
-	LogData::CRITICALITY_LEVEL _criticality = LogData::INFO;
+	LogData::CRITICALITY_LEVEL _criticality = LogData::LOG_INFO;
 	wxDateTime _start, _end;
 	wxArrayInt _loggers;
 	std::vector<size_t> _ids;

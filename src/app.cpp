@@ -99,26 +99,26 @@ LogData::CRITICALITY_LEVEL LogData::ParseCriticality(const wxString& str)
 {
 	if(str.IsEmpty())
 	{
-		return LogData::UNKNWON;
+		return LogData::LOG_UNKNWON;
 	}
 	switch((char)str[0])
 	{
 	case 'I':
-		return LogData::INFO;
+		return LogData::LOG_INFO;
 	case 'D':
-		return LogData::DEBUG;
+		return LogData::LOG_DEBUG;
 	case 'T':
-		return LogData::TRACE;
+		return LogData::LOG_TRACE;
 	case 'E':
-		return LogData::ERROR;
+		return LogData::LOG_ERROR;
 	case 'W':
-		return LogData::WARNING;
+		return LogData::LOG_WARNING;
 	case 'C':
-		return LogData::CRITICAL;
+		return LogData::LOG_CRITICAL;
 	case 'F':
-		return LogData::FATAL;
+		return LogData::LOG_FATAL;
 	default:
-		return LogData::UNKNWON;
+		return LogData::LOG_UNKNWON;
 	}
 }
 
@@ -219,7 +219,7 @@ void LogData::AddLogLine(wxString date, wxString logger, wxString message)
 {
 	AddLogLine(
 		ParseDate(date.Trim(false).Trim(true)),
-		LogData::INFO,
+		LogData::LOG_INFO,
 		0,
 		_loggers.Get(logger.Trim(false).Trim(true)),
 		0,
@@ -486,6 +486,7 @@ void LogListModel::GetValueByRow(wxVariant &variant, unsigned int row, unsigned 
 bool LogListModel::GetAttrByRow(unsigned int row, unsigned int col, wxDataViewItemAttr &attr )const
 {
 	// TODO
+	return false;
 }
 
 bool LogListModel::SetValueByRow(const wxVariant &variant, unsigned int row, unsigned int col)
@@ -496,7 +497,7 @@ bool LogListModel::SetValueByRow(const wxVariant &variant, unsigned int row, uns
 void LogListModel::ClearFilter()
 {
 	_filter = false;
-	_criticality = LogData::INFO;
+	_criticality = LogData::LOG_INFO;
 	_start = _end = wxDateTime();
 	Update();
 }
