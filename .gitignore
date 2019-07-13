@@ -45,6 +45,10 @@ m4/lt~obsolete.m4
 .anjuta_sym_db.db
 .anjuta/
 nbproject/
+.vscode/
+GPATH
+GRTAGS
+GTAGS
 
 # Typical build subdirectories
 Debug/
