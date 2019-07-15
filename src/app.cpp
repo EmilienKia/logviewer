@@ -128,6 +128,10 @@ void LogData::ParseLogFiles(const wxArrayString& paths)
 	{
 		ParseLogFile(path);
 	}
+
+	SortLogsByDate();
+	SortAndReindexLoggers();
+	SortAndReindexSources();
 	UpdateStatistics();
 	NotifyUpdate();
 }
@@ -149,14 +153,67 @@ void LogData::ParseLogFile(const wxString& path)
 		ParseLogLine(text.ReadLine());
 	}
 	AppendExtraLine();
+}
 
+void LogData::SortLogsByDate()
+{
 	std::sort(/*std::execution::par_unseq,*/ _entries.begin(), _entries.end(),
 		[](const Entry& a, const Entry& b)->bool
-		{
-			return a.date < b.date;
-		});
+	{
+		return a.date < b.date;
+	});
+}
 
-	UpdateStatistics();
+void LogData::SortAndReindexLoggers()
+{
+	std::vector<wxString> sorted = _loggers;
+	std::sort(/*std::execution::par_unseq,*/ sorted.begin(), sorted.end());
+
+	std::vector<int> reindex;
+	for (int i = 0; i < _loggers.size(); ++i)
+	{
+		for (int pos = 0; pos < sorted.size(); ++pos)
+		{
+			if (_loggers[i] == sorted[pos])
+			{
+				reindex.push_back(pos);
+				break;
+			}
+		}
+	}
+
+	for (Entry& entry : _entries)
+	{
+		entry.logger = reindex[entry.logger];
+	}
+
+	std::swap(_loggers, sorted);
+}
+
+void LogData::SortAndReindexSources()
+{
+	std::vector<wxString> sorted = _sources;
+	std::sort(/*std::execution::par_unseq,*/ sorted.begin(), sorted.end());
+
+	std::vector<int> reindex;
+	for (int i = 0; i < _sources.size(); ++i)
+	{
+		for (int pos = 0; pos < sorted.size(); ++pos)
+		{
+			if (_sources[i] == sorted[pos])
+			{
+				reindex.push_back(pos);
+				break;
+			}
+		}
+	}
+
+	for (Entry& entry : _entries)
+	{
+		entry.source = reindex[entry.source];
+	}
+
+	std::swap(_sources, sorted);
 }
 
 wxArrayString LogData::SplitLine(const wxString& line)
@@ -412,26 +469,22 @@ _logData(logData)
 
 size_t LogListModel::Count()const
 {
-	if(_filter)
-	{
-		return _ids.size();
-	}
-	else
-	{
-		return _logData._entries.size();
-	}
+	return _ids.size();
 }
 
 LogData::Entry& LogListModel::Get(size_t id)const
 {
-	if(_filter)
-	{
-		return _logData._entries[_ids[id]];
-	}
-	else
-	{
-		return _logData._entries[id];
-	}
+	return _logData._entries[_ids[id]];
+}
+
+LogData::Entry& LogListModel::Get(wxDataViewItem item)const
+{
+	return Get(GetRow(item));
+}
+
+unsigned int LogListModel::GetPos(wxDataViewItem item)const
+{
+	return GetRow(item);
 }
 
 void LogListModel::Updated(LogData& data)
@@ -496,7 +549,6 @@ bool LogListModel::SetValueByRow(const wxVariant &variant, unsigned int row, uns
 
 void LogListModel::ClearFilter()
 {
-	_filter = false;
 	_criticality = LogData::LOG_INFO;
 	_start = _end = wxDateTime();
 	Update();
@@ -504,24 +556,79 @@ void LogListModel::ClearFilter()
 
 void LogListModel::SetCriticalityFilterLevel(LogData::CRITICALITY_LEVEL criticality)
 {
-	_filter = true;
 	_criticality = criticality;
 	Update();
 }
 
 void LogListModel::SetStartDate(const wxDateTime& date)
 {
-	_filter = true;
 	_start = date;
 	Update();
 }
 
 void LogListModel::SetEndDate(const wxDateTime& date)
 {
-	_filter = true;
 	_end = date;
 	Update();
 }
+
+void LogListModel::ResetStartDate()
+{
+	_start = wxDateTime();
+	Update();
+}
+
+void LogListModel::ResetEndDate()
+{
+	_end = wxDateTime();
+	Update();
+}
+
+void LogListModel::DisplayAllLoggers()
+{
+	_displayedLoggers.clear();
+	for (int i = 0; i < _logData._loggers.size(); i++)
+	{
+		_displayedLoggers.push_back(i);
+	}
+	Update();
+}
+
+void LogListModel::HideAllLoggers()
+{
+	_displayedLoggers.clear();
+	Update();
+}
+
+void LogListModel::DisplayLogger(const wxString& logger, bool display)
+{
+	long logid = _logData._loggers.Find(logger);
+	DisplayLogger(logid, display);
+}
+
+void LogListModel::DisplayLogger(int logger, bool display)
+{
+	if (logger != wxNOT_FOUND)
+	{
+		if (display)
+		{
+			if (_displayedLoggers.Index(logger) == wxNOT_FOUND)
+			{
+				_displayedLoggers.Add(logger);
+				Update();
+			}
+		}
+		else /* hide */
+		{
+			if (_displayedLoggers.Index(logger) != wxNOT_FOUND)
+			{
+				_displayedLoggers.Remove(logger);
+				Update();
+			}
+		}
+	}
+}
+
 
 void LogListModel::Update()
 {
@@ -534,7 +641,7 @@ void LogListModel::Update()
 		if(		entry.criticality >= _criticality
 			&& (!_start.IsValid() || entry.date >= _start )
 			&& (!_end.IsValid() || entry.date <= _end )
-			&& _loggers.Index(entry.logger) !=  wxNOT_FOUND
+			&& _displayedLoggers.Index(entry.logger) !=  wxNOT_FOUND
 		)
 		{
 			_ids.push_back(n);
@@ -553,6 +660,18 @@ void LogListModel::Update()
 wxStringCache::wxStringCache()
 {
 	push_back("");
+}
+
+long wxStringCache::Find(const wxString& str)const
+{
+	for (long n = 0; n<size(); ++n)
+	{
+		if (at(n) == str)
+		{
+			return n;
+		}
+	}
+	return wxNOT_FOUND;
 }
 
 long wxStringCache::Get(const wxString& str)

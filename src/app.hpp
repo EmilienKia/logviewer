@@ -49,6 +49,8 @@ class wxStringCache : public std::vector<wxString>
 public:
 	wxStringCache();
 
+	long Find(const wxString& str)const;
+
 	long Get(const wxString& str);
 	wxString GetString(long id)const;
 };
@@ -97,6 +99,10 @@ struct LogData
 	void AddLogLine(wxString date, wxString criticality, wxString thread, wxString logger, wxString source, wxString message);
 
 	void AppendExtraLine();
+
+	void SortLogsByDate();
+	void SortAndReindexLoggers();
+	void SortAndReindexSources();
 
 	void UpdateStatistics();
 
@@ -160,8 +166,12 @@ public:
 		COLUMN_COUNT
 	};
 
+	LogData& GetLogData() { return _logData; }
+
 	size_t Count()const;
 	LogData::Entry& Get(size_t id)const;
+	LogData::Entry& Get(wxDataViewItem item)const;
+	unsigned int GetPos(wxDataViewItem item)const;
 
 	void ClearFilter();
 	void SetCriticalityFilterLevel(LogData::CRITICALITY_LEVEL criticality);
@@ -170,7 +180,11 @@ public:
 	void ResetStartDate();
 	void ResetEndDate();
 
-	wxArrayInt& GetLoggerArray() {return _loggers;}
+	void DisplayAllLoggers();
+	void HideAllLoggers();
+	void DisplayLogger(const wxString& logger, bool display = true);
+	void DisplayLogger(int logger, bool display = true);
+	wxArrayInt& GetDisplayedLoggerArray() {return _displayedLoggers;}
 
 	void Update();
 
@@ -178,10 +192,9 @@ protected:
 	void Updated(LogData& data);
 	LogData& _logData;
 
-	bool _filter = false;
 	LogData::CRITICALITY_LEVEL _criticality = LogData::LOG_INFO;
 	wxDateTime _start, _end;
-	wxArrayInt _loggers;
+	wxArrayInt _displayedLoggers;
 	std::vector<size_t> _ids;
 };
 

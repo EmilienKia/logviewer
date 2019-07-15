@@ -52,6 +52,10 @@ enum {
 	ID_LV_LOGGER_LISTBOX,
 	ID_LV_SHOW_ALL_LOGGERS,
 	ID_LV_SHOW_NO_LOGGERS,
+	ID_LV_SHOW_ONLY_CURRENT_LOGGER,
+	ID_LV_SHOW_ALL_BUT_CURRENT_LOGGER,
+	ID_LV_FOCUS_PREVIOUS_CURRENT_LOGGER,
+	ID_LV_FOCUS_NEXT_CURRENT_LOGGER,
 };
 
 
@@ -95,6 +99,7 @@ protected:
 	virtual void Updated(LogData& data) override;
 
 	void UpdateLoggerFilterFromListBox();
+	void UpdateListBoxFromLoggerFilter();
 
 	wxAuiManager _manager;
 	wxRibbonBar*  _ribbon;
@@ -133,6 +138,11 @@ private:
 	void OnLoggersListBoxItemChecked(wxCommandEvent& event);
 	void OnLoggerShowAll(wxCommandEvent& event);
 	void OnLoggerShowNone(wxCommandEvent& event);
+	void OnLoggerShowOnlyCurrent(wxCommandEvent& event);
+	void OnLoggerShowAllButCurrent(wxCommandEvent& event);
+	void OnLoggerFocusPrevious(wxCommandEvent& event);
+	void OnLoggerFocusNext(wxCommandEvent& event);
+
 };
 
 #endif // _FRAME_HPP_

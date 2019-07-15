@@ -191,6 +191,10 @@ void Frame::init()
 				wxRibbonButtonBar* bar = new wxRibbonButtonBar(panel, wxID_ANY);
 				bar->AddButton(ID_LV_SHOW_ALL_LOGGERS, "All loggers", wxRibbonBmp(wxART_TICK_MARK), "Show entries for all loggers");
 				bar->AddButton(ID_LV_SHOW_NO_LOGGERS, "No logger", wxRibbonBmp(wxART_CROSS_MARK), "Show entries for no logger (display nothing)");
+				bar->AddButton(ID_LV_SHOW_ONLY_CURRENT_LOGGER, "Only current logger", wxRibbonBmp(wxART_MINUS), "Show entries for logger of currently selected entry only");
+				bar->AddButton(ID_LV_SHOW_ALL_BUT_CURRENT_LOGGER, "All but current logger", wxRibbonBmp(wxART_PLUS), "Show entries for all loggers but currently selected entry");
+				bar->AddButton(ID_LV_FOCUS_PREVIOUS_CURRENT_LOGGER, "Focus previous", wxRibbonBmp(wxART_GO_UP), "Focus previous entry with current logger");
+				bar->AddButton(ID_LV_FOCUS_NEXT_CURRENT_LOGGER, "Focus next", wxRibbonBmp(wxART_GO_DOWN), "Focus next entry with current logger");
 			}
 		}
 		_ribbon->Realise();
@@ -299,29 +303,35 @@ void Frame::Updated(LogData& data)
 		_end->SetValue(data._endDate);
 		_end->SetDefault(data._endDate);
 	}
-	if(_loggers)
-	{
-		_loggers->Freeze();
-		_loggers->Clear();
-		for(const auto& logger : data._loggers)
-		{
-			_loggers->Append(logger);
-		}
-		for(unsigned int u=0; u<_loggers->GetCount(); ++u)
-		{
-			_loggers->Select(u);
-		}
-		_loggers->Thaw();
-	}
+	UpdateListBoxFromLoggerFilter();
 }
 
 void Frame::UpdateLoggerFilterFromListBox()
 {
 	if(_loggers)
 	{
-		_logModel->GetLoggerArray().Clear();
-		_loggers->GetCheckedItems(_logModel->GetLoggerArray());
+		_logModel->GetDisplayedLoggerArray().Clear();
+		_loggers->GetCheckedItems(_logModel->GetDisplayedLoggerArray());
 		_logModel->Update();
+	}
+}
+
+void Frame::UpdateListBoxFromLoggerFilter()
+{
+	if (_loggers)
+	{
+		_loggers->Freeze();
+		_loggers->Clear();
+		for (const auto& logger : _logModel->GetLogData()._loggers)
+		{
+			_loggers->Append(logger);
+		}
+		wxArrayInt& arr = _logModel->GetDisplayedLoggerArray();
+		for (int i = 0; i<arr.GetCount(); ++i)
+		{
+			_loggers->Check(arr[i]);
+		}
+		_loggers->Thaw();
 	}
 }
 
@@ -340,36 +350,95 @@ BEGIN_EVENT_TABLE(Frame, wxFrame)
 	EVT_RIBBONPANEL_EXTBUTTON_ACTIVATED(ID_LV_LOGGER_PANEL, Frame::OnLoggersExtButtonActivated)
 	EVT_MENU(ID_LV_SHOW_ALL_LOGGERS, Frame::OnLoggerShowAll)
 	EVT_MENU(ID_LV_SHOW_NO_LOGGERS, Frame::OnLoggerShowNone)
+	EVT_MENU(ID_LV_SHOW_ONLY_CURRENT_LOGGER, Frame::OnLoggerShowOnlyCurrent)
+	EVT_MENU(ID_LV_SHOW_ALL_BUT_CURRENT_LOGGER, Frame::OnLoggerShowAllButCurrent)
+	EVT_MENU(ID_LV_FOCUS_PREVIOUS_CURRENT_LOGGER, Frame::OnLoggerFocusPrevious)
+	EVT_MENU(ID_LV_FOCUS_NEXT_CURRENT_LOGGER, Frame::OnLoggerFocusNext)
 END_EVENT_TABLE()
 
 void Frame::OnLoggersListBoxItemChecked(wxCommandEvent& event)
 {
-	UpdateLoggerFilterFromListBox();
+	int id = event.GetInt();
+	if (id != wxNOT_FOUND)
+	{
+		_logModel->DisplayLogger(id, _loggers->IsChecked(id));
+		UpdateListBoxFromLoggerFilter();
+	}
 }
 
 void Frame::OnLoggerShowAll(wxCommandEvent& event)
 {
-	if(_loggers)
-	{
-		for(unsigned int u=0; u<_loggers->GetCount(); ++u)
-		{
-			_loggers->Check(u, true);
-		}
-		UpdateLoggerFilterFromListBox();
-	}
+	_logModel->DisplayAllLoggers();
+	UpdateListBoxFromLoggerFilter();
 }
 
 void Frame::OnLoggerShowNone(wxCommandEvent& event)
 {
-	if(_loggers)
-	{
-		for(unsigned int u=0; u<_loggers->GetCount(); ++u)
-		{
-			_loggers->Check(u, false);
-		}
-		UpdateLoggerFilterFromListBox();
+	_logModel->HideAllLoggers();
+	UpdateListBoxFromLoggerFilter();
+}
+
+void Frame::OnLoggerShowOnlyCurrent(wxCommandEvent& event)
+{
+	if (_logs->GetSelectedItemsCount() > 0) {
+		LogData::Entry& entry = _logModel->Get(_logs->GetSelection());
+		_logModel->HideAllLoggers();
+		_logModel->DisplayLogger(entry.logger);
+		UpdateListBoxFromLoggerFilter();
 	}
 }
+
+void Frame::OnLoggerShowAllButCurrent(wxCommandEvent& event)
+{
+	if (_logs->GetSelectedItemsCount() > 0) {
+		LogData::Entry& entry = _logModel->Get(_logs->GetSelection());
+		_logModel->DisplayAllLoggers();
+		_logModel->DisplayLogger(entry.logger, false);
+		UpdateListBoxFromLoggerFilter();
+	}
+}
+
+void Frame::OnLoggerFocusPrevious(wxCommandEvent& event)
+{
+	if (_logs->GetSelectedItemsCount() > 0) {
+		int pos = _logModel->GetPos(_logs->GetSelection());
+		LogData::Entry& entry = _logModel->Get(pos);
+		int logger = entry.logger;
+		while (pos > 0)
+		{
+			--pos;
+			LogData::Entry& e = _logModel->Get(pos);
+			if (e.logger == logger)
+			{
+				wxDataViewItem item = _logModel->GetItem(pos);
+				_logs->Select(item);
+				_logs->EnsureVisible(item);
+				break;
+			}
+		}
+	}
+}
+
+void Frame::OnLoggerFocusNext(wxCommandEvent& event)
+{
+	if (_logs->GetSelectedItemsCount() > 0) {
+		int pos = _logModel->GetPos(_logs->GetSelection());
+		LogData::Entry& entry = _logModel->Get(pos);
+		int logger = entry.logger;
+		while (++pos < _logModel->GetCount())
+		{
+			LogData::Entry& e = _logModel->Get(pos);
+			if (e.logger == logger)
+			{
+				wxDataViewItem item = _logModel->GetItem(pos);
+				_logs->Select(item);
+				_logs->EnsureVisible(item);
+				break;
+			}
+		}
+	}
+}
+
 
 void Frame::OnLoggersExtButtonActivated(wxRibbonPanelEvent& event)
 {
