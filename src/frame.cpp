@@ -57,7 +57,7 @@ DateTimeCtrl::DateTimeCtrl(wxWindow *parent, wxWindowID id, const wxPoint &pos, 
 
 bool DateTimeCtrl::Create(wxWindow *parent, wxWindowID id, const wxPoint &pos, const wxSize &size)
 {
-	if(!wxWindow::Create(parent, id, pos, size, wxTAB_TRAVERSAL|wxBORDER_NONE|wxCLIP_CHILDREN, "DateTimeCtrl"))
+	if(!wxWindow::Create(parent, id, pos, size, wxTAB_TRAVERSAL|wxBORDER_NONE|wxCLIP_CHILDREN|wxTRANSPARENT_WINDOW, "DateTimeCtrl"))
 	{
 		return false;
 	}
@@ -68,6 +68,7 @@ bool DateTimeCtrl::Create(wxWindow *parent, wxWindowID id, const wxPoint &pos, c
 	szr->Add(_time, 1, wxALIGN_CENTER_VERTICAL|wxALL, 2);
 	szr->Add(new wxBitmapButton(this, wxID_REVERT, wxArtProvider::GetBitmap(wxART_CROSS_MARK, wxART_BUTTON)));
 	SetSizer(szr);
+	return true;
 }
 
 void DateTimeCtrl::SetValue(const wxDateTime& date)
@@ -166,9 +167,9 @@ void Frame::init()
 			}
 			{
 				wxRibbonPanel *panel = new wxRibbonPanel(page, wxID_ANY, "Criticality");
-				_criticalitySlider = new wxSlider(panel, wxID_ANY, LogData::LOG_INFO, LogData::LOG_UNKNWON, LogData::LOG_FATAL);
+				_criticalitySlider = new wxSlider(panel, wxID_ANY, LogData::LOG_INFO, LogData::LOG_UNKNWON, LogData::LOG_FATAL, wxDefaultPosition, wxDefaultSize, wxTRANSPARENT_WINDOW|wxSL_HORIZONTAL| wxSL_AUTOTICKS);
 				_criticalitySlider->SetMinSize(wxSize(128, -1));
-				_criticalityText = new wxStaticText(panel, wxID_ANY, "INFO", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL);
+				_criticalityText = new wxStaticText(panel, wxID_ANY, "INFO", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL|wxTRANSPARENT_WINDOW);
 				wxSizer* szr = new wxBoxSizer(wxVERTICAL);
 				szr->Add(_criticalitySlider, 1, wxEXPAND|wxALL, 2);
 				szr->Add(_criticalityText, 1, wxEXPAND|wxALL, 2);
@@ -180,9 +181,9 @@ void Frame::init()
 				_end   = new DateTimeCtrl(panel, ID_LV_END_DATE);
 
 				wxFlexGridSizer* szr = new wxFlexGridSizer(2, 2, 2, 2);
-				szr->Add(new wxStaticText(panel, wxID_ANY, "From:"), 1, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL|wxALL, 2);
+				szr->Add(new wxStaticText(panel, wxID_ANY, "From:", wxDefaultPosition, wxDefaultSize, wxTRANSPARENT_WINDOW), 1, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL|wxALL, 2);
 				szr->Add(_begin, 1, wxEXPAND|wxALL, 2);
-				szr->Add(new wxStaticText(panel, wxID_ANY, "To:"), 1, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL|wxALL, 2);
+				szr->Add(new wxStaticText(panel, wxID_ANY, "To:", wxDefaultPosition, wxDefaultSize, wxTRANSPARENT_WINDOW), 1, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL|wxALL, 2);
 				szr->Add(_end, 1, wxEXPAND|wxALL, 2);
 				panel->SetSizer(szr);
 			}
