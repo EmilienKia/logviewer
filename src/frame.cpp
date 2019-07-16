@@ -251,58 +251,58 @@ void Frame::Updated(LogData& data)
 {
 	if(_status)
 	{
-		if(data.Count()==0)
+		if(data.EntryCount()==0)
 		{
 			_status->SetStatusText("No entry");
 		}
-		else if(data.Count()==1)
+		else if(data.EntryCount()==1)
 		{
 			_status->SetStatusText("One entry");
 		}
 		else
 		{
 			wxString str;
-			str << data.Count() << " entries ";
-			if(data.CriticalityCounts()[LOG_FATAL]>0)
+			str << data.EntryCount() << " entries ";
+			if(data.GetCriticalityCount(LOG_FATAL)>0)
 			{
-				str << " - " << data.CriticalityCounts()[LOG_FATAL] << " fatal(s) ";
+				str << " - " << data.GetCriticalityCount(LOG_FATAL) << " fatal(s) ";
 			}
-			if(data.CriticalityCounts()[LOG_CRITICAL]>0)
+			if(data.GetCriticalityCount(LOG_CRITICAL)>0)
 			{
-				str << " - " << data.CriticalityCounts()[LOG_CRITICAL] << " critical(s) ";
+				str << " - " << data.GetCriticalityCount(LOG_CRITICAL) << " critical(s) ";
 			}
-			if(data.CriticalityCounts()[LOG_ERROR]>0)
+			if(data.GetCriticalityCount(LOG_ERROR)>0)
 			{
-				str << " - " << data.CriticalityCounts()[LOG_ERROR] << " error(s) ";
+				str << " - " << data.GetCriticalityCount(LOG_ERROR) << " error(s) ";
 			}
-			if(data.CriticalityCounts()[LOG_WARNING]>0)
+			if(data.GetCriticalityCount(LOG_WARNING)>0)
 			{
-				str << " - " << data.CriticalityCounts()[LOG_WARNING] << " warning(s) ";
+				str << " - " << data.GetCriticalityCount(LOG_WARNING) << " warning(s) ";
 			}
-			if(data.CriticalityCounts()[LOG_INFO]>0)
+			if(data.GetCriticalityCount(LOG_INFO)>0)
 			{
-				str << " - " << data.CriticalityCounts()[LOG_INFO] << " info(s) ";
+				str << " - " << data.GetCriticalityCount(LOG_INFO) << " info(s) ";
 			}
-			if(data.CriticalityCounts()[LOG_DEBUG]>0)
+			if(data.GetCriticalityCount(LOG_DEBUG)>0)
 			{
-				str << " - " << data.CriticalityCounts()[LOG_DEBUG] << " debug(s) ";
+				str << " - " << data.GetCriticalityCount(LOG_DEBUG) << " debug(s) ";
 			}
-			if(data.CriticalityCounts()[LOG_TRACE]>0)
+			if(data.GetCriticalityCount(LOG_TRACE)>0)
 			{
-				str << " - " << data.CriticalityCounts()[LOG_TRACE] << " trace(s) ";
+				str << " - " << data.GetCriticalityCount(LOG_TRACE) << " trace(s) ";
 			}
 			_status->SetStatusText(str);
 		}
 	}
 	if(_begin)
 	{
-		_begin->SetValue(data._beginDate);
-		_begin->SetDefault(data._beginDate);
+		_begin->SetValue(data.GetBeginDate());
+		_begin->SetDefault(data.GetBeginDate());
 	}
 	if(_end)
 	{
-		_end->SetValue(data._endDate);
-		_end->SetDefault(data._endDate);
+		_end->SetValue(data.GetEndDate());
+		_end->SetDefault(data.GetEndDate());
 	}
 	UpdateListBoxFromLoggerFilter();
 }
@@ -426,7 +426,7 @@ void Frame::OnLoggerFocusNext(wxCommandEvent& event)
 		int pos = _logModel->GetPos(_logs->GetSelection());
 		LogData::Entry& entry = _logModel->Get(pos);
 		int logger = entry.logger;
-		while (++pos < _logModel->GetCount())
+		while (++pos < (int)_logModel->GetCount())
 		{
 			LogData::Entry& e = _logModel->Get(pos);
 			if (e.logger == logger)
@@ -439,7 +439,6 @@ void Frame::OnLoggerFocusNext(wxCommandEvent& event)
 		}
 	}
 }
-
 
 void Frame::OnLoggersExtButtonActivated(wxRibbonPanelEvent& event)
 {

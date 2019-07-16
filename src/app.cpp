@@ -93,10 +93,7 @@ void Parser::ParseLogFiles(const wxArrayString& paths)
 		ParseLogFile(path);
 	}
 
-	_data.SortLogsByDate();
-	_data.SortAndReindexColumns();
-	_data.UpdateStatistics();
-	_data.NotifyUpdate();
+	_data.Synchronize();
 }
 
 void Parser::ParseLogFile(const wxString& path)
@@ -362,6 +359,14 @@ void LogData::AddLog(const wxDateTime& date, CRITICALITY_LEVEL criticality, long
 		});
 }
 
+void LogData::Synchronize()
+{
+	SortLogsByDate();
+	SortAndReindexColumns();
+	UpdateStatistics();
+	NotifyUpdate();
+}
+
 const wxString& LogData::FormatCriticality(CRITICALITY_LEVEL c)
 {
 	static const wxString criticalities[] = {"UNKNWON", "TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "FATAL"};
@@ -432,16 +437,6 @@ wxString LogData::FormatDate(const wxDateTime& date)
 
 void LogData::UpdateStatistics()
 {
-	if(_entries.empty())
-	{
-		_beginDate = _endDate = wxDateTime();
-	}
-	else
-	{
-		_beginDate = _entries.front().date;
-		_endDate   = _entries.back().date;
-	}
-
 	_criticalityCounts = {0, 0, 0, 0, 0, 0, 0, 0};
 
 	for(auto& entry : _entries)
@@ -460,8 +455,15 @@ void LogData::NotifyUpdate()
 
 
 
+wxDateTime LogData::GetBeginDate()const
+{
+	return !_entries.empty() ? _entries.front().date : wxDateTime() ;
+}
 
-
+wxDateTime LogData::GetEndDate()const
+{
+	return !_entries.empty() ? _entries.back().date : wxDateTime();
+}
 
 
 

@@ -77,7 +77,6 @@ enum CRITICALITY_LEVEL
 
 struct LogData
 {
-
 	struct Entry
 	{
 		wxDateTime date;
@@ -93,32 +92,32 @@ struct LogData
 	void AddLog(const wxDateTime& date, CRITICALITY_LEVEL criticality, wxString thread, wxString logger, wxString source, wxString message);
 	void AddLog(const wxDateTime& date, CRITICALITY_LEVEL criticality, long thread, long logger, long source, const wxString& message);
 
+	void Synchronize();
 
 	void SortLogsByDate();
 	void SortAndReindexColumns();
-
 	void UpdateStatistics();
 
-
 	static const wxString& FormatCriticality(CRITICALITY_LEVEL c);
-
 	static wxString FormatDate(const wxDateTime& date);
 
+	size_t EntryCount()const {return _entries.size();}
 
-	size_t Count()const {return _entries.size();}
-	const std::array<size_t,LOG_CRITICALITY_COUNT>& CriticalityCounts()const {return _criticalityCounts;}
-	const wxDateTime& BeginDate()const {return _beginDate;}
-	const wxDateTime& EndDate()const {return _endDate;}
+	Entry& GetEntry(size_t index) { return _entries[index]; }
+	const Entry& GetEntry(size_t index) const { return _entries[index]; }
+
+	size_t GetCriticalityCount(CRITICALITY_LEVEL level)const {return _criticalityCounts[level];}
+	wxDateTime GetBeginDate()const;
+	wxDateTime GetEndDate()const;
 
 	void AddListener(LogDatalListener* listener) {_listeners.insert(listener);}
 	void RemListener(LogDatalListener* listener) {_listeners.erase(listener);}
 
 	wxStringCache _threads, _loggers, _sources;
+
 	std::vector<Entry> _entries;
 
 	std::array<size_t,LOG_CRITICALITY_COUNT> _criticalityCounts;
-	wxDateTime _beginDate, _endDate;
-
 
 	std::set<LogDatalListener*> _listeners;
 	void NotifyUpdate();
