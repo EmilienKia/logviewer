@@ -76,70 +76,33 @@ void LogViewerApp::OnOpen(wxCommandEvent& event)
 
 	wxArrayString files;
 	fd.GetPaths(files);
-	ParseLogFiles(files);
-}
 
+	Parser parser(*this);
+	parser.ParseLogFiles(files);
+}
 
 
 //
-// Log database
+// Log parser
 //
 
-LogData::LogData()
+void Parser::ParseLogFiles(const wxArrayString& paths)
 {
-}
-
-const wxString& LogData::FormatCriticality(CRITICALITY_LEVEL c)
-{
-	static const wxString criticalities[] = {"UNKNWON", "TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "FATAL"};
-	return criticalities[c];
-}
-
-LogData::CRITICALITY_LEVEL LogData::ParseCriticality(const wxString& str)
-{
-	if(str.IsEmpty())
-	{
-		return LogData::LOG_UNKNWON;
-	}
-	switch((char)str[0])
-	{
-	case 'I':
-		return LogData::LOG_INFO;
-	case 'D':
-		return LogData::LOG_DEBUG;
-	case 'T':
-		return LogData::LOG_TRACE;
-	case 'E':
-		return LogData::LOG_ERROR;
-	case 'W':
-		return LogData::LOG_WARNING;
-	case 'C':
-		return LogData::LOG_CRITICAL;
-	case 'F':
-		return LogData::LOG_FATAL;
-	default:
-		return LogData::LOG_UNKNWON;
-	}
-}
-
-void LogData::ParseLogFiles(const wxArrayString& paths)
-{
-	for(auto path : paths)
+	for (auto path : paths)
 	{
 		ParseLogFile(path);
 	}
 
-	SortLogsByDate();
-	SortAndReindexLoggers();
-	SortAndReindexSources();
-	UpdateStatistics();
-	NotifyUpdate();
+	_data.SortLogsByDate();
+	_data.SortAndReindexColumns();
+	_data.UpdateStatistics();
+	_data.NotifyUpdate();
 }
 
-void LogData::ParseLogFile(const wxString& path)
+void Parser::ParseLogFile(const wxString& path)
 {
 	wxFFileInputStream file(path);
-	if(!file.IsOk())
+	if (!file.IsOk())
 	{
 		wxLogError("Cannot open file %s", path);
 		return;
@@ -148,159 +111,30 @@ void LogData::ParseLogFile(const wxString& path)
 	_tempExtra.Empty();
 
 	wxTextInputStream text(file);
-	while(!file.Eof())
+	while (!file.Eof())
 	{
 		ParseLogLine(text.ReadLine());
 	}
 	AppendExtraLine();
 }
 
-void LogData::SortLogsByDate()
+
+void Parser::ParseLogLine(const wxString& line)
 {
-	std::sort(/*std::execution::par_unseq,*/ _entries.begin(), _entries.end(),
-		[](const Entry& a, const Entry& b)->bool
-	{
-		return a.date < b.date;
-	});
-}
-
-void LogData::SortAndReindexLoggers()
-{
-	std::vector<wxString> sorted = _loggers;
-	std::sort(/*std::execution::par_unseq,*/ sorted.begin(), sorted.end());
-
-	std::vector<int> reindex;
-	for (int i = 0; i < _loggers.size(); ++i)
-	{
-		for (int pos = 0; pos < sorted.size(); ++pos)
-		{
-			if (_loggers[i] == sorted[pos])
-			{
-				reindex.push_back(pos);
-				break;
-			}
-		}
-	}
-
-	for (Entry& entry : _entries)
-	{
-		entry.logger = reindex[entry.logger];
-	}
-
-	std::swap(_loggers, sorted);
-}
-
-void LogData::SortAndReindexSources()
-{
-	std::vector<wxString> sorted = _sources;
-	std::sort(/*std::execution::par_unseq,*/ sorted.begin(), sorted.end());
-
-	std::vector<int> reindex;
-	for (int i = 0; i < _sources.size(); ++i)
-	{
-		for (int pos = 0; pos < sorted.size(); ++pos)
-		{
-			if (_sources[i] == sorted[pos])
-			{
-				reindex.push_back(pos);
-				break;
-			}
-		}
-	}
-
-	for (Entry& entry : _entries)
-	{
-		entry.source = reindex[entry.source];
-	}
-
-	std::swap(_sources, sorted);
-}
-
-wxArrayString LogData::SplitLine(const wxString& line)
-{
-	wxArrayString arr;
-	size_t cur = 0;
-	size_t pos = 0;
-	while(pos = line.find(" | ", cur), pos != wxString::npos)
-	{
-		arr.Add(line.SubString(cur, pos-1));
-		cur = pos + 3;
-		if(cur>=line.Length()){
-			break;
-		}
-	}
-	if(cur<line.Length()){
-		arr.Add(line.Mid(cur));
-	}
-	return arr;
-}
-
-void LogData::AppendExtraLine()
-{
-	if(!_tempExtra.IsEmpty())
-	{
-		if(!_entries.empty())
-		{
-			_entries.back().extra = _tempExtra;
-		}
-		_tempExtra.clear();
-	}
-}
-
-void LogData::AddLogLine(const wxDateTime& date, CRITICALITY_LEVEL criticality, long thread, long logger, long source, const wxString& message)
-{
-	AppendExtraLine();
-	_entries.push_back({
-		date,
-		criticality,
-		thread,
-		logger,
-		source,
-		message
-	});
-}
-
-void LogData::AddLogLine(wxString date, wxString criticality, wxString thread, wxString logger, wxString source, wxString message)
-{
-	AddLogLine(
-		ParseDate(date.Trim(false).Trim(true)),
-		ParseCriticality(criticality.Trim(false)),
-		_threads.Get(thread.Trim(false).Trim(true)),
-		_loggers.Get(logger.Trim(false).Trim(true)),
-		_sources.Get(source.Trim(false).Trim(true)),
-		message.Trim(false).Trim(true)
-	);
-}
-
-void LogData::AddLogLine(wxString date, wxString logger, wxString message)
-{
-	AddLogLine(
-		ParseDate(date.Trim(false).Trim(true)),
-		LogData::LOG_INFO,
-		0,
-		_loggers.Get(logger.Trim(false).Trim(true)),
-		0,
-		message.Trim(false).Trim(true)
-	);
-}
-
-
-void LogData::ParseLogLine(const wxString& line)
-{
-	if(!line.IsEmpty())
+	if (!line.IsEmpty())
 	{
 		wxArrayString arr = SplitLine(line);
-		if(!arr.IsEmpty())
+		if (!arr.IsEmpty())
 		{
-			if(arr[0].Length() < 28 )
-			// 28 : arbitrary value greater than any supported text date length
+			if (arr[0].Length() < 28)
+				// 28 : arbitrary value greater than any supported text date length
 			{
-				if(arr.GetCount()==3)
+				if (arr.GetCount() == 3)
 				{
 					AddLogLine(arr[0], arr[1], arr[2]);
 					return;
 				}
-				else if(arr.GetCount()==6)
+				else if (arr.GetCount() == 6)
 				{
 					AddLogLine(arr[0], arr[1], arr[2], arr[3], arr[4], arr[5]);
 					return;
@@ -312,30 +146,81 @@ void LogData::ParseLogLine(const wxString& line)
 	}
 }
 
-wxString LogData::FormatDate(const wxDateTime& date)
+wxArrayString Parser::SplitLine(const wxString& line)
 {
-	return date.IsValid()
-		? date.FormatISOCombined(' ') << "," << wxString::Format("%03ld", (long)date.GetMillisecond())
-		: "";
+	wxArrayString arr;
+	size_t cur = 0;
+	size_t pos = 0;
+	while (pos = line.find(" | ", cur), pos != wxString::npos)
+	{
+		arr.Add(line.SubString(cur, pos - 1));
+		cur = pos + 3;
+		if (cur >= line.Length()) {
+			break;
+		}
+	}
+	if (cur<line.Length()) {
+		arr.Add(line.Mid(cur));
+	}
+	return arr;
 }
 
-wxDateTime LogData::ParseDate(const wxString& str)
+void Parser::AppendExtraLine()
 {
-	long y=0, mo=0, d=0, h=0, m=0, s=0, ms=0;
+	if (!_tempExtra.IsEmpty())
+	{
+		if (!_data._entries.empty())
+		{
+			_data._entries.back().extra = _tempExtra;
+		}
+		_tempExtra.clear();
+	}
+}
+
+void Parser::AddLogLine(wxString date, wxString criticality, wxString thread, wxString logger, wxString source, wxString message)
+{
+	AppendExtraLine();
+	_data.AddLog(
+		ParseDate(date.Trim(false).Trim(true)),
+		ParseCriticality(criticality.Trim(false)),
+		thread,
+		logger,
+		source,
+		message
+	);
+}
+
+void Parser::AddLogLine(wxString date, wxString logger, wxString message)
+{
+	AppendExtraLine();
+	_data.AddLog(
+		ParseDate(date.Trim(false).Trim(true)),
+		CRITICALITY_LEVEL::LOG_INFO,
+		"",
+		logger.Trim(false).Trim(true),
+		"",
+		message.Trim(false).Trim(true)
+	);
+}
+
+
+wxDateTime Parser::ParseDate(const wxString& str)
+{
+	long y = 0, mo = 0, d = 0, h = 0, m = 0, s = 0, ms = 0;
 	size_t start, len;
 
 	wxRegEx reDate;;
-	if(!reDate.Compile("^(\\d{4})[\\-\\/ ]?(\\d{2})[\\-\\/ ]?(\\d{2})[T\\- ](\\d{2})[\\: ]?(\\d{2})[\\: ]?(\\d{2})([,.](\\d{3}))?$", wxRE_ADVANCED ))
+	if (!reDate.Compile("^(\\d{4})[\\-\\/ ]?(\\d{2})[\\-\\/ ]?(\\d{2})[T\\- ](\\d{2})[\\: ]?(\\d{2})[\\: ]?(\\d{2})([,.](\\d{3}))?$", wxRE_ADVANCED))
 	{
 		std::cerr << "RegEx compilation error" << std::endl;
 		goto error;
 	}
-	if(reDate.Matches(str))
+	if (reDate.Matches(str))
 	{
 		// Grp 1 : year
-		if(reDate.GetMatch(&start, &len, 1))
+		if (reDate.GetMatch(&start, &len, 1))
 		{
-			if(!str.substr(start, len).ToLong(&y)) goto error;
+			if (!str.substr(start, len).ToLong(&y)) goto error;
 		}
 		else
 		{
@@ -344,9 +229,9 @@ wxDateTime LogData::ParseDate(const wxString& str)
 		}
 
 		// Grp 2 : month
-		if(reDate.GetMatch(&start, &len, 2))
+		if (reDate.GetMatch(&start, &len, 2))
 		{
-			if(!str.substr(start, len).ToLong(&mo)) goto error;
+			if (!str.substr(start, len).ToLong(&mo)) goto error;
 		}
 		else
 		{
@@ -355,9 +240,9 @@ wxDateTime LogData::ParseDate(const wxString& str)
 		}
 
 		// Grp 3 : day
-		if(reDate.GetMatch(&start, &len, 3))
+		if (reDate.GetMatch(&start, &len, 3))
 		{
-			if(!str.substr(start, len).ToLong(&d)) goto error;
+			if (!str.substr(start, len).ToLong(&d)) goto error;
 		}
 		else
 		{
@@ -367,9 +252,9 @@ wxDateTime LogData::ParseDate(const wxString& str)
 
 
 		// Grp 4 : hours
-		if(reDate.GetMatch(&start, &len, 4))
+		if (reDate.GetMatch(&start, &len, 4))
 		{
-			if(!str.substr(start, len).ToLong(&h)) goto error;
+			if (!str.substr(start, len).ToLong(&h)) goto error;
 		}
 		else
 		{
@@ -379,9 +264,9 @@ wxDateTime LogData::ParseDate(const wxString& str)
 
 
 		// Grp 5 : minutes
-		if(reDate.GetMatch(&start, &len, 5))
+		if (reDate.GetMatch(&start, &len, 5))
 		{
-			if(!str.substr(start, len).ToLong(&m)) goto error;
+			if (!str.substr(start, len).ToLong(&m)) goto error;
 		}
 		else
 		{
@@ -391,9 +276,9 @@ wxDateTime LogData::ParseDate(const wxString& str)
 
 
 		// Grp 6 : seconds
-		if(reDate.GetMatch(&start, &len, 6))
+		if (reDate.GetMatch(&start, &len, 6))
 		{
-			if(!str.substr(start, len).ToLong(&s)) goto error;
+			if (!str.substr(start, len).ToLong(&s)) goto error;
 		}
 		else
 		{
@@ -403,13 +288,13 @@ wxDateTime LogData::ParseDate(const wxString& str)
 
 
 		// Grp 8 : milliseconds
-		if(reDate.GetMatch(&start, &len, 8))
+		if (reDate.GetMatch(&start, &len, 8))
 		{
-			if(!str.substr(start, len).ToLong(&ms)) goto error;
+			if (!str.substr(start, len).ToLong(&ms)) goto error;
 		}
 		else ms = 0;
 
-		return wxDateTime(d, (wxDateTime::Month)(mo-1), y, h, m, s, ms);
+		return wxDateTime(d, (wxDateTime::Month)(mo - 1), y, h, m, s, ms);
 	}
 	else
 	{
@@ -419,6 +304,131 @@ wxDateTime LogData::ParseDate(const wxString& str)
 error:
 	return wxDateTime();
 }
+
+CRITICALITY_LEVEL Parser::ParseCriticality(const wxString& str)
+{
+	if (str.IsEmpty())
+	{
+		return CRITICALITY_LEVEL::LOG_UNKNWON;
+	}
+	switch ((char)str[0])
+	{
+	case 'I':
+		return CRITICALITY_LEVEL::LOG_INFO;
+	case 'D':
+		return CRITICALITY_LEVEL::LOG_DEBUG;
+	case 'T':
+		return CRITICALITY_LEVEL::LOG_TRACE;
+	case 'E':
+		return CRITICALITY_LEVEL::LOG_ERROR;
+	case 'W':
+		return CRITICALITY_LEVEL::LOG_WARNING;
+	case 'C':
+		return CRITICALITY_LEVEL::LOG_CRITICAL;
+	case 'F':
+		return CRITICALITY_LEVEL::LOG_FATAL;
+	default:
+		return CRITICALITY_LEVEL::LOG_UNKNWON;
+	}
+}
+
+
+//
+// Log database
+//
+
+LogData::LogData()
+{
+}
+
+void LogData::AddLog(const wxDateTime& date, CRITICALITY_LEVEL criticality, wxString thread, wxString logger, wxString source, wxString message)
+{
+	AddLog(date, criticality,
+		_threads.Get(thread.Trim(false).Trim(true)),
+		_loggers.Get(logger.Trim(false).Trim(true)),
+		_sources.Get(source.Trim(false).Trim(true)),
+		message.Trim(false).Trim(true));
+}
+
+void LogData::AddLog(const wxDateTime& date, CRITICALITY_LEVEL criticality, long thread, long logger, long source, const wxString& message)
+{
+	_entries.push_back({
+		date,
+		criticality,
+		thread,
+		logger,
+		source,
+		message
+		});
+}
+
+const wxString& LogData::FormatCriticality(CRITICALITY_LEVEL c)
+{
+	static const wxString criticalities[] = {"UNKNWON", "TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "FATAL"};
+	return criticalities[c];
+}
+
+void LogData::SortLogsByDate()
+{
+	std::sort(/*std::execution::par_unseq,*/ _entries.begin(), _entries.end(),
+		[](const Entry& a, const Entry& b)->bool
+	{
+		return a.date < b.date;
+	});
+}
+
+void LogData::SortAndReindexColumns()
+{
+	auto reindex = [](const std::vector<wxString>& before, const std::vector<wxString>& after) ->std::vector<int>
+	{
+		std::vector<int> reindex;
+		for (int i = 0; i < before.size(); ++i)
+		{
+			for (int pos = 0; pos < after.size(); ++pos)
+			{
+				if (before[i] == after[pos])
+				{
+					reindex.push_back(pos);
+					break;
+				}
+			}
+		}
+		return reindex;
+	};
+
+	std::vector<wxString> loggers = _loggers;
+	std::sort(/*std::execution::par_unseq,*/ loggers.begin(), loggers.end());
+	std::vector<int> reindexLoggers = reindex(_loggers, loggers);
+
+	std::vector<wxString> sources = _sources;
+	std::sort(/*std::execution::par_unseq,*/ sources.begin(), sources.end());
+	std::vector<int> reindexSources = reindex(_sources, sources);
+
+	std::vector<wxString> threads = _threads;
+	std::sort(/*std::execution::par_unseq,*/ threads.begin(), threads.end());
+	std::vector<int> reindexThreads = reindex(_threads, threads);
+
+	for (Entry& entry : _entries)
+	{
+		entry.logger = reindexLoggers[entry.logger];
+		entry.source = reindexSources[entry.source];
+		entry.thread = reindexThreads[entry.thread];
+	}
+
+	std::swap(_loggers, loggers);
+	std::swap(_sources, sources);
+	std::swap(_threads, threads);
+}
+
+
+
+wxString LogData::FormatDate(const wxDateTime& date)
+{
+	return date.IsValid()
+		? date.FormatISOCombined(' ') << "," << wxString::Format("%03ld", (long)date.GetMillisecond())
+		: "";
+}
+
 
 void LogData::UpdateStatistics()
 {
@@ -549,12 +559,12 @@ bool LogListModel::SetValueByRow(const wxVariant &variant, unsigned int row, uns
 
 void LogListModel::ClearFilter()
 {
-	_criticality = LogData::LOG_INFO;
+	_criticality = CRITICALITY_LEVEL::LOG_INFO;
 	_start = _end = wxDateTime();
 	Update();
 }
 
-void LogListModel::SetCriticalityFilterLevel(LogData::CRITICALITY_LEVEL criticality)
+void LogListModel::SetCriticalityFilterLevel(CRITICALITY_LEVEL criticality)
 {
 	_criticality = criticality;
 	Update();

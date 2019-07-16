@@ -60,21 +60,23 @@ struct LogDatalListener
 	virtual void Updated(LogData& data) =0;
 };
 
+enum CRITICALITY_LEVEL
+{
+	LOG_UNKNWON,
+	LOG_TRACE,
+	LOG_DEBUG,
+	LOG_INFO,
+	LOG_WARNING,
+	LOG_ERROR,
+	LOG_CRITICAL,
+	LOG_FATAL,
+
+	LOG_CRITICALITY_COUNT
+};
+
+
 struct LogData
 {
-	enum CRITICALITY_LEVEL
-	{
-		LOG_UNKNWON,
-		LOG_TRACE,
-		LOG_DEBUG,
-		LOG_INFO,
-		LOG_WARNING,
-		LOG_ERROR,
-		LOG_CRITICAL,
-		LOG_FATAL,
-
-		LOG_CRITICALITY_COUNT
-	};
 
 	struct Entry
 	{
@@ -88,33 +90,19 @@ struct LogData
 	};
 
 	LogData();
+	void AddLog(const wxDateTime& date, CRITICALITY_LEVEL criticality, wxString thread, wxString logger, wxString source, wxString message);
+	void AddLog(const wxDateTime& date, CRITICALITY_LEVEL criticality, long thread, long logger, long source, const wxString& message);
 
-	void ParseLogFiles(const wxArrayString& paths);
-	void ParseLogFile(const wxString& path);
-	void ParseLogLine(const wxString& line);
-
-	void AddLogLine(const wxDateTime& date, CRITICALITY_LEVEL criticality, long thread, long logger, long source, const wxString& message);
-
-	void AddLogLine(wxString date, wxString logger, wxString message);
-	void AddLogLine(wxString date, wxString criticality, wxString thread, wxString logger, wxString source, wxString message);
-
-	void AppendExtraLine();
 
 	void SortLogsByDate();
-	void SortAndReindexLoggers();
-	void SortAndReindexSources();
+	void SortAndReindexColumns();
 
 	void UpdateStatistics();
 
-	static wxArrayString SplitLine(const wxString& line);
 
 	static const wxString& FormatCriticality(CRITICALITY_LEVEL c);
-	static CRITICALITY_LEVEL ParseCriticality(const wxString& str);
 
 	static wxString FormatDate(const wxDateTime& date);
-	static wxDateTime ParseDate(const wxString& str);
-
-
 
 
 	size_t Count()const {return _entries.size();}
@@ -131,13 +119,37 @@ struct LogData
 	std::array<size_t,LOG_CRITICALITY_COUNT> _criticalityCounts;
 	wxDateTime _beginDate, _endDate;
 
-	wxString _tempExtra;
 
 	std::set<LogDatalListener*> _listeners;
 	void NotifyUpdate();
 };
 
 
+class Parser
+{
+protected:
+	LogData& _data;
+
+	wxString _tempExtra;
+
+	void ParseLogLine(const wxString& line);
+
+	void AddLogLine(wxString date, wxString logger, wxString message);
+	void AddLogLine(wxString date, wxString criticality, wxString thread, wxString logger, wxString source, wxString message);
+
+	void AppendExtraLine();
+
+public:
+	Parser(LogData& data) :_data(data) {}
+
+	void ParseLogFiles(const wxArrayString& paths);
+	void ParseLogFile(const wxString& path);
+
+	static wxArrayString SplitLine(const wxString& line);
+	static wxDateTime ParseDate(const wxString& str);
+	static CRITICALITY_LEVEL ParseCriticality(const wxString& str);
+
+};
 
 
 class LogListModel : public wxDataViewVirtualListModel, protected LogDatalListener
@@ -174,7 +186,7 @@ public:
 	unsigned int GetPos(wxDataViewItem item)const;
 
 	void ClearFilter();
-	void SetCriticalityFilterLevel(LogData::CRITICALITY_LEVEL criticality);
+	void SetCriticalityFilterLevel(CRITICALITY_LEVEL criticality);
 	void SetStartDate(const wxDateTime& date);
 	void SetEndDate(const wxDateTime& date);
 	void ResetStartDate();
@@ -192,7 +204,7 @@ protected:
 	void Updated(LogData& data);
 	LogData& _logData;
 
-	LogData::CRITICALITY_LEVEL _criticality = LogData::LOG_INFO;
+	CRITICALITY_LEVEL _criticality = CRITICALITY_LEVEL::LOG_INFO;
 	wxDateTime _start, _end;
 	wxArrayInt _displayedLoggers;
 	std::vector<size_t> _ids;

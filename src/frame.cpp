@@ -167,7 +167,7 @@ void Frame::init()
 			}
 			{
 				wxRibbonPanel *panel = new wxRibbonPanel(page, wxID_ANY, "Criticality");
-				_criticalitySlider = new wxSlider(panel, wxID_ANY, LogData::LOG_INFO, LogData::LOG_UNKNWON, LogData::LOG_FATAL, wxDefaultPosition, wxDefaultSize, wxTRANSPARENT_WINDOW|wxSL_HORIZONTAL| wxSL_AUTOTICKS);
+				_criticalitySlider = new wxSlider(panel, wxID_ANY, LOG_INFO, LOG_UNKNWON, LOG_FATAL, wxDefaultPosition, wxDefaultSize, wxTRANSPARENT_WINDOW|wxSL_HORIZONTAL| wxSL_AUTOTICKS);
 				_criticalitySlider->SetMinSize(wxSize(128, -1));
 				_criticalityText = new wxStaticText(panel, wxID_ANY, "INFO", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL|wxTRANSPARENT_WINDOW);
 				wxSizer* szr = new wxBoxSizer(wxVERTICAL);
@@ -263,33 +263,33 @@ void Frame::Updated(LogData& data)
 		{
 			wxString str;
 			str << data.Count() << " entries ";
-			if(data.CriticalityCounts()[LogData::LOG_FATAL]>0)
+			if(data.CriticalityCounts()[LOG_FATAL]>0)
 			{
-				str << " - " << data.CriticalityCounts()[LogData::LOG_FATAL] << " fatal(s) ";
+				str << " - " << data.CriticalityCounts()[LOG_FATAL] << " fatal(s) ";
 			}
-			if(data.CriticalityCounts()[LogData::LOG_CRITICAL]>0)
+			if(data.CriticalityCounts()[LOG_CRITICAL]>0)
 			{
-				str << " - " << data.CriticalityCounts()[LogData::LOG_CRITICAL] << " critical(s) ";
+				str << " - " << data.CriticalityCounts()[LOG_CRITICAL] << " critical(s) ";
 			}
-			if(data.CriticalityCounts()[LogData::LOG_ERROR]>0)
+			if(data.CriticalityCounts()[LOG_ERROR]>0)
 			{
-				str << " - " << data.CriticalityCounts()[LogData::LOG_ERROR] << " error(s) ";
+				str << " - " << data.CriticalityCounts()[LOG_ERROR] << " error(s) ";
 			}
-			if(data.CriticalityCounts()[LogData::LOG_WARNING]>0)
+			if(data.CriticalityCounts()[LOG_WARNING]>0)
 			{
-				str << " - " << data.CriticalityCounts()[LogData::LOG_WARNING] << " warning(s) ";
+				str << " - " << data.CriticalityCounts()[LOG_WARNING] << " warning(s) ";
 			}
-			if(data.CriticalityCounts()[LogData::LOG_INFO]>0)
+			if(data.CriticalityCounts()[LOG_INFO]>0)
 			{
-				str << " - " << data.CriticalityCounts()[LogData::LOG_INFO] << " info(s) ";
+				str << " - " << data.CriticalityCounts()[LOG_INFO] << " info(s) ";
 			}
-			if(data.CriticalityCounts()[LogData::LOG_DEBUG]>0)
+			if(data.CriticalityCounts()[LOG_DEBUG]>0)
 			{
-				str << " - " << data.CriticalityCounts()[LogData::LOG_DEBUG] << " debug(s) ";
+				str << " - " << data.CriticalityCounts()[LOG_DEBUG] << " debug(s) ";
 			}
-			if(data.CriticalityCounts()[LogData::LOG_TRACE]>0)
+			if(data.CriticalityCounts()[LOG_TRACE]>0)
 			{
-				str << " - " << data.CriticalityCounts()[LogData::LOG_TRACE] << " trace(s) ";
+				str << " - " << data.CriticalityCounts()[LOG_TRACE] << " trace(s) ";
 			}
 			_status->SetStatusText(str);
 		}
@@ -528,7 +528,7 @@ void Frame::OnRibbonButtonClicked(wxEvent/*wxRibbonButtonBarEvent*/& event)
 
 void Frame::OnCriticalitySliderEvent(wxCommandEvent& event)
 {
-	LogData::CRITICALITY_LEVEL level = (LogData::CRITICALITY_LEVEL)_criticalitySlider->GetValue();
+	CRITICALITY_LEVEL level = (CRITICALITY_LEVEL)_criticalitySlider->GetValue();
 	_criticalityText->SetLabelText(LogData::FormatCriticality(level));
 	_logModel->SetCriticalityFilterLevel(level);
 }
