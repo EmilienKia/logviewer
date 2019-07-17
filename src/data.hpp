@@ -135,6 +135,7 @@ protected:
 
 public:
 	LogData();
+	void Clear();
 	void AddLog(const wxDateTime& date, CRITICALITY_LEVEL criticality, wxString thread, wxString logger, wxString source, wxString message);
 	void AddLog(const wxDateTime& date, CRITICALITY_LEVEL criticality, long thread, long logger, long source, const wxString& message);
 

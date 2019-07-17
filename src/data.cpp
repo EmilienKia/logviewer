@@ -305,6 +305,12 @@ LogData::LogData()
 {
 }
 
+void LogData::Clear()
+{
+	_entries.clear();
+	Synchronize();
+}
+
 void LogData::AddLog(const wxDateTime& date, CRITICALITY_LEVEL criticality, wxString thread, wxString logger, wxString source, wxString message)
 {
 	AddLog(date, criticality,

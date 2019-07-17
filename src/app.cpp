@@ -54,6 +54,7 @@ bool LogViewerApp::OnInit()
 
 BEGIN_EVENT_TABLE(LogViewerApp, wxApp)
 	EVT_MENU(wxID_OPEN, LogViewerApp::OnOpen)
+	EVT_MENU(wxID_CLEAR, LogViewerApp::OnClear)
 	EVT_MENU(wxID_EXIT, LogViewerApp::OnExit)
 END_EVENT_TABLE()
 
@@ -75,3 +76,7 @@ void LogViewerApp::OnOpen(wxCommandEvent& event)
 	parser.ParseLogFiles(files);
 }
 
+void LogViewerApp::OnClear(wxCommandEvent& event)
+{
+	GetLogData().Clear();
+}

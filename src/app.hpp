@@ -50,6 +50,7 @@ protected:
 
 private:
 	void OnOpen(wxCommandEvent& event);
+	void OnClear(wxCommandEvent& event);
 	void OnExit(wxCommandEvent& event);
 };
 

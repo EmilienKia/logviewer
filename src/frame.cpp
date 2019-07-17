@@ -165,6 +165,7 @@ void Frame::init()
 				wxRibbonPanel* panel = new wxRibbonPanel(page, wxID_ANY, "Files");
 				wxRibbonButtonBar* bar = new wxRibbonButtonBar(panel, wxID_ANY);
 				bar->AddButton(wxID_OPEN, "Open", wxRibbonBmp(wxART_FILE_OPEN));
+				bar->AddButton(wxID_CLEAR, "Clear", wxRibbonBmp(wxART_NEW));
 			}
 			{
 				wxRibbonPanel *panel = new wxRibbonPanel(page, wxID_ANY, "Criticality");
