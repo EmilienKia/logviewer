@@ -73,14 +73,14 @@ bool DateTimeCtrl::Create(wxWindow *parent, wxWindowID id, const wxPoint &pos, c
 
 void DateTimeCtrl::SetValue(const wxDateTime& date)
 {
-	_curr = date;
+	_curr = date.IsValid() ? date : wxDateTime::Now();
 	_date->SetValue(_curr);
 	_time->SetValue(_curr);
 }
 
 void DateTimeCtrl::SetDefault(const wxDateTime& date)
 {
-	_def = date;
+	_def = date.IsValid() ? date : wxDateTime::Now();
 }
 
 BEGIN_EVENT_TABLE(DateTimeCtrl, wxWindow)
