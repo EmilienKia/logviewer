@@ -141,8 +141,9 @@ Frame::~Frame()
 
 void Frame::init()
 {
-	_logModel = new LogListModel(wxGetApp());
-	wxGetApp().AddListener(this);
+	_logModel = new LogListModel(wxGetApp().GetFilteredLogData());
+	_loggerModel = new LoggerListModel(wxGetApp().GetFilteredLogData());
+	wxGetApp().GetLogData().AddListener(this);
 
 	_status = CreateStatusBar();
 
@@ -219,7 +220,7 @@ void Frame::init()
 
 	// Log panel
 	{
-		_logs = new wxDataViewCtrl(this, wxID_ANY);
+		_logs = new wxDataViewCtrl(this, ID_LV_LOGS);
 		_logs->AppendTextColumn("Criticality",	LogListModel::CRITICALITY,	wxDATAVIEW_CELL_INERT, -1, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE|wxDATAVIEW_COL_REORDERABLE);
 		_logs->AppendTextColumn("Date", 		LogListModel::DATE,			wxDATAVIEW_CELL_INERT, 180, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE|wxDATAVIEW_COL_REORDERABLE);
 		_logs->AppendTextColumn("Logger", 		LogListModel::LOGGER,		wxDATAVIEW_CELL_INERT, -1, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE|wxDATAVIEW_COL_REORDERABLE);
@@ -234,7 +235,10 @@ void Frame::init()
 
 	// Loggers
 	{
-		_loggers = new wxCheckListBox(this, ID_LV_LOGGER_LISTBOX);
+		_loggers = new wxDataViewCtrl(this, ID_LV_LOGGER_LISTBOX);
+		_loggers->AppendToggleColumn("", LoggerListModel::SHOWN, wxDATAVIEW_CELL_ACTIVATABLE, 48, wxALIGN_CENTER, /*wxDATAVIEW_COL_RESIZABLE |*/ wxDATAVIEW_COL_REORDERABLE);
+		_loggers->AppendTextColumn("Logger", LoggerListModel::LOGGER, wxDATAVIEW_CELL_INERT, -1, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
+		_loggers->AssociateModel(_loggerModel);
 		_manager.AddPane(_loggers, wxAuiPaneInfo().Left().Floatable().Dockable().Caption("Loggers").BestSize(200, -1).Hide());
 	}
 
@@ -304,42 +308,13 @@ void Frame::Updated(LogData& data)
 		_end->SetValue(data.GetEndDate());
 		_end->SetDefault(data.GetEndDate());
 	}
-	UpdateListBoxFromLoggerFilter();
-}
-
-void Frame::UpdateLoggerFilterFromListBox()
-{
-	if(_loggers)
-	{
-		_logModel->GetDisplayedLoggerArray().Clear();
-		_loggers->GetCheckedItems(_logModel->GetDisplayedLoggerArray());
-		_logModel->Update();
-	}
-}
-
-void Frame::UpdateListBoxFromLoggerFilter()
-{
-	if (_loggers)
-	{
-		_loggers->Freeze();
-		_loggers->Clear();
-		for (const auto& logger : _logModel->GetLogData()._loggers)
-		{
-			_loggers->Append(logger);
-		}
-		wxArrayInt& arr = _logModel->GetDisplayedLoggerArray();
-		for (int i = 0; i<arr.GetCount(); ++i)
-		{
-			_loggers->Check(arr[i]);
-		}
-		_loggers->Thaw();
-	}
 }
 
 BEGIN_EVENT_TABLE(Frame, wxFrame)
-	EVT_DATAVIEW_SELECTION_CHANGED(wxID_ANY, Frame::OnLogSelChanged)
-	EVT_DATAVIEW_ITEM_ACTIVATED(wxID_ANY, Frame::OnLogActivated)
-	EVT_DATAVIEW_ITEM_CONTEXT_MENU(wxID_ANY, Frame::OnLogContextMenu)
+	EVT_DATAVIEW_SELECTION_CHANGED(ID_LV_LOGS, Frame::OnLogSelChanged)
+	EVT_DATAVIEW_ITEM_ACTIVATED(ID_LV_LOGS, Frame::OnLogActivated)
+	EVT_DATAVIEW_ITEM_CONTEXT_MENU(ID_LV_LOGS, Frame::OnLogContextMenu)
+
 	EVT_CUSTOM(wxEVT_COMMAND_RIBBONBUTTON_CLICKED, wxID_ANY, Frame::OnRibbonButtonClicked)
 	EVT_SLIDER(wxID_ANY, Frame::OnCriticalitySliderEvent)
 	EVT_DATE_CHANGED(ID_LV_BEGIN_DATE, Frame::OnBeginDateEvent)
@@ -347,8 +322,8 @@ BEGIN_EVENT_TABLE(Frame, wxFrame)
 	EVT_MENU(ID_LV_SHOW_EXTRA, Frame::OnDisplayExtra)
 	EVT_MENU(ID_LV_SET_BEGIN_DATE, Frame::OnSetAsBegin)
 	EVT_MENU(ID_LV_SET_END_DATE, Frame::OnSetAsEnd)
-	EVT_CHECKLISTBOX(ID_LV_LOGGER_LISTBOX, Frame::OnLoggersListBoxItemChecked)
 	EVT_RIBBONPANEL_EXTBUTTON_ACTIVATED(ID_LV_LOGGER_PANEL, Frame::OnLoggersExtButtonActivated)
+	EVT_DATAVIEW_ITEM_ACTIVATED(ID_LV_LOGGER_LISTBOX, Frame::OnLoggersItemActivated)
 	EVT_MENU(ID_LV_SHOW_ALL_LOGGERS, Frame::OnLoggerShowAll)
 	EVT_MENU(ID_LV_SHOW_NO_LOGGERS, Frame::OnLoggerShowNone)
 	EVT_MENU(ID_LV_SHOW_ONLY_CURRENT_LOGGER, Frame::OnLoggerShowOnlyCurrent)
@@ -357,58 +332,51 @@ BEGIN_EVENT_TABLE(Frame, wxFrame)
 	EVT_MENU(ID_LV_FOCUS_NEXT_CURRENT_LOGGER, Frame::OnLoggerFocusNext)
 END_EVENT_TABLE()
 
-void Frame::OnLoggersListBoxItemChecked(wxCommandEvent& event)
+void Frame::OnLoggersItemActivated(wxDataViewEvent& event)
 {
-	int id = event.GetInt();
-	if (id != wxNOT_FOUND)
-	{
-		_logModel->DisplayLogger(id, _loggers->IsChecked(id));
-		UpdateListBoxFromLoggerFilter();
-	}
+	long logger = _loggerModel->GetLoggerId(event.GetItem());
+	_loggerModel->GetData().ToggleLogger(logger);
 }
 
 void Frame::OnLoggerShowAll(wxCommandEvent& event)
 {
-	_logModel->DisplayAllLoggers();
-	UpdateListBoxFromLoggerFilter();
+	wxGetApp().GetFilteredLogData().DisplayAllLoggers();
+//	UpdateListBoxFromLoggerFilter();
 }
 
 void Frame::OnLoggerShowNone(wxCommandEvent& event)
 {
-	_logModel->HideAllLoggers();
-	UpdateListBoxFromLoggerFilter();
+	wxGetApp().GetFilteredLogData().HideAllLoggers();
+//	UpdateListBoxFromLoggerFilter();
 }
 
 void Frame::OnLoggerShowOnlyCurrent(wxCommandEvent& event)
 {
 	if (_logs->GetSelectedItemsCount() > 0) {
-		LogData::Entry& entry = _logModel->Get(_logs->GetSelection());
-		_logModel->HideAllLoggers();
-		_logModel->DisplayLogger(entry.logger);
-		UpdateListBoxFromLoggerFilter();
+		Entry& entry = _logModel->Get(_logs->GetSelection());
+		_loggerModel->GetData().DisplayOnlyLogger(entry.logger);
 	}
 }
 
 void Frame::OnLoggerShowAllButCurrent(wxCommandEvent& event)
 {
 	if (_logs->GetSelectedItemsCount() > 0) {
-		LogData::Entry& entry = _logModel->Get(_logs->GetSelection());
-		_logModel->DisplayAllLoggers();
-		_logModel->DisplayLogger(entry.logger, false);
-		UpdateListBoxFromLoggerFilter();
+		Entry& entry = _logModel->Get(_logs->GetSelection());
+		_loggerModel->GetData().DisplayAllButLogger(entry.logger);
 	}
+
 }
 
 void Frame::OnLoggerFocusPrevious(wxCommandEvent& event)
 {
 	if (_logs->GetSelectedItemsCount() > 0) {
 		int pos = _logModel->GetPos(_logs->GetSelection());
-		LogData::Entry& entry = _logModel->Get(pos);
+		Entry& entry = _logModel->Get(pos);
 		int logger = entry.logger;
 		while (pos > 0)
 		{
 			--pos;
-			LogData::Entry& e = _logModel->Get(pos);
+			Entry& e = _logModel->Get(pos);
 			if (e.logger == logger)
 			{
 				wxDataViewItem item = _logModel->GetItem(pos);
@@ -424,11 +392,11 @@ void Frame::OnLoggerFocusNext(wxCommandEvent& event)
 {
 	if (_logs->GetSelectedItemsCount() > 0) {
 		int pos = _logModel->GetPos(_logs->GetSelection());
-		LogData::Entry& entry = _logModel->Get(pos);
+		Entry& entry = _logModel->Get(pos);
 		int logger = entry.logger;
 		while (++pos < (int)_logModel->GetCount())
 		{
-			LogData::Entry& e = _logModel->Get(pos);
+			Entry& e = _logModel->Get(pos);
 			if (e.logger == logger)
 			{
 				wxDataViewItem item = _logModel->GetItem(pos);
@@ -458,9 +426,9 @@ void Frame::OnSetAsBegin(wxCommandEvent& event)
 	{
 		wxDataViewItem sel = _logs->GetSelection();
 		size_t row = _logModel->GetRow(sel);
-		LogData::Entry& entry = _logModel->Get(row);
+		Entry& entry = _logModel->Get(row);
 		_begin->SetValue(entry.date);
-		_logModel->SetStartDate(entry.date);
+		_logModel->GetData().SetStartDate(entry.date);
 	}
 }
 
@@ -470,9 +438,9 @@ void Frame::OnSetAsEnd(wxCommandEvent& event)
 	{
 		wxDataViewItem sel = _logs->GetSelection();
 		size_t row = _logModel->GetRow(sel);
-		LogData::Entry& entry = _logModel->Get(row);
+		Entry& entry = _logModel->Get(row);
 		_end->SetValue(entry.date);
-		_logModel->SetEndDate(entry.date);
+		_logModel->GetData().SetEndDate(entry.date);
 	}
 }
 
@@ -495,7 +463,7 @@ void Frame::OnLogSelChanged(wxDataViewEvent& /*event*/)
 	{
 		wxDataViewItem sel = _logs->GetSelection();
 		size_t row = _logModel->GetRow(sel);
-		LogData::Entry& entry = _logModel->Get(row);
+		Entry& entry = _logModel->Get(row);
 		_extraText->SetValue(entry.extra);
 	}
 	else
@@ -528,16 +496,16 @@ void Frame::OnRibbonButtonClicked(wxEvent/*wxRibbonButtonBarEvent*/& event)
 void Frame::OnCriticalitySliderEvent(wxCommandEvent& event)
 {
 	CRITICALITY_LEVEL level = (CRITICALITY_LEVEL)_criticalitySlider->GetValue();
-	_criticalityText->SetLabelText(LogData::FormatCriticality(level));
-	_logModel->SetCriticalityFilterLevel(level);
+	_criticalityText->SetLabelText(Formatter::FormatCriticality(level));
+	wxGetApp().GetFilteredLogData().SetCriticalityFilterLevel(level);
 }
 
 void Frame::OnBeginDateEvent(wxDateEvent& event)
 {
-	_logModel->SetStartDate(event.GetDate());
+	wxGetApp().GetFilteredLogData().SetStartDate(event.GetDate());
 }
 
 void Frame::OnEndDateEvent(wxDateEvent& event)
 {
-	_logModel->SetEndDate(event.GetDate());
+	wxGetApp().GetFilteredLogData().SetEndDate(event.GetDate());
 }

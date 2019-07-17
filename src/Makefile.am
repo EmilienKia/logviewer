@@ -12,6 +12,6 @@ AM_CFLAGS =\
 
 bin_PROGRAMS = logviewer
 
-logviewer_SOURCES = frame.cpp frame.hpp app.cpp app.hpp
+logviewer_SOURCES = app.hpp app.cpp data.hpp data.cpp frame.hpp frame.cpp model.hpp model.cpp
 logviewer_LDFLAGS =
 logviewer_LDADD = $(WX_LIBS)

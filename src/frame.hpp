@@ -1,7 +1,7 @@
 /* -*- Mode: C++; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-  */
 /*
  * frame.hpp
- * Copyright (C) 2018 Emilien Kia <Emilien.Kia+dev@gmail.com>
+ * Copyright (C) 2018-2019 Emilien Kia <Emilien.Kia+dev@gmail.com>
  *
  * logviewer is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -39,6 +39,8 @@ class wxTimePickerCtrl;
 enum {
 
 	ID_LOGVIEWER_CUSTOM = wxID_HIGHEST + 1,
+
+	ID_LV_LOGS,
 
 	ID_LV_BEGIN_DATE,
 	ID_LV_END_DATE,
@@ -85,7 +87,7 @@ protected:
 };
 
 
-class Frame: public wxFrame, public LogDatalListener
+class Frame: public wxFrame, public LogData::Listener
 {
 	DECLARE_EVENT_TABLE()
 public:
@@ -98,15 +100,17 @@ protected:
 
 	virtual void Updated(LogData& data) override;
 
-	void UpdateLoggerFilterFromListBox();
+	//void UpdateLoggerFilterFromListBox();
 	void UpdateListBoxFromLoggerFilter();
 
 	wxAuiManager _manager;
 	wxRibbonBar*  _ribbon;
 
 	LogListModel* _logModel;
+	LoggerListModel* _loggerModel;
 
 	wxDataViewCtrl* _logs;
+	wxDataViewCtrl* _loggers;
 	wxStatusBar* _status;
 
 	wxSlider*		_criticalitySlider;
@@ -116,7 +120,6 @@ protected:
 	DateTimeCtrl*	_end;
 
 	wxTextCtrl*	_extraText;
-	wxCheckListBox* _loggers;
 
 private:
 	void OnRibbonButtonClicked(wxEvent/*wxRibbonButtonBarEvent*/& event);
@@ -135,7 +138,7 @@ private:
 	void OnSetAsEnd(wxCommandEvent& event);
 
 	void OnLoggersExtButtonActivated(wxRibbonPanelEvent& event);
-	void OnLoggersListBoxItemChecked(wxCommandEvent& event);
+	void OnLoggersItemActivated(wxDataViewEvent& event);
 	void OnLoggerShowAll(wxCommandEvent& event);
 	void OnLoggerShowNone(wxCommandEvent& event);
 	void OnLoggerShowOnlyCurrent(wxCommandEvent& event);
