@@ -237,8 +237,16 @@ void Frame::init()
 	// Loggers
 	{
 		_loggers = new wxDataViewCtrl(this, ID_LV_LOGGER_LISTBOX);
-		_loggers->AppendToggleColumn("", LoggerListModel::SHOWN, wxDATAVIEW_CELL_ACTIVATABLE, 48, wxALIGN_CENTER, /*wxDATAVIEW_COL_RESIZABLE |*/ wxDATAVIEW_COL_REORDERABLE);
-		_loggers->AppendTextColumn("Logger", LoggerListModel::LOGGER, wxDATAVIEW_CELL_INERT, -1, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
+		_loggers->AppendToggleColumn("",       LoggerListModel::SHOWN,         wxDATAVIEW_CELL_ACTIVATABLE, 32, wxALIGN_CENTER /*, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE*/);
+		_loggers->AppendTextColumn("Logger",   LoggerListModel::LOGGER,        wxDATAVIEW_CELL_INERT, 300, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
+		_loggers->AppendTextColumn("Total",    LoggerListModel::COUNT,         wxDATAVIEW_CELL_INERT, 48, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
+		_loggers->AppendTextColumn("Fatal",    LoggerListModel::CRIT_FATAL,    wxDATAVIEW_CELL_INERT, 48, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
+		_loggers->AppendTextColumn("Critical", LoggerListModel::CRIT_CRITICAL, wxDATAVIEW_CELL_INERT, 48, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
+		_loggers->AppendTextColumn("Error",    LoggerListModel::CRIT_ERROR,    wxDATAVIEW_CELL_INERT, 48, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
+		_loggers->AppendTextColumn("Warning",  LoggerListModel::CRIT_WARNING,  wxDATAVIEW_CELL_INERT, 48, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
+		_loggers->AppendTextColumn("Info",     LoggerListModel::CRIT_INFO,     wxDATAVIEW_CELL_INERT, 48, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
+		_loggers->AppendTextColumn("Debug",    LoggerListModel::CRIT_DEBUG,    wxDATAVIEW_CELL_INERT, 48, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
+		_loggers->AppendTextColumn("Trace",    LoggerListModel::CRIT_TRACE,    wxDATAVIEW_CELL_INERT, 48, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
 		_loggers->AssociateModel(_loggerModel);
 		_manager.AddPane(_loggers, wxAuiPaneInfo().Left().Floatable().Dockable().Caption("Loggers").BestSize(200, -1).Hide());
 	}

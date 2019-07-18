@@ -130,6 +130,9 @@ protected:
 
 	std::array<size_t, LOG_CRITICALITY_COUNT> _criticalityCounts;
 
+	std::vector<long> _loggersEntryCount;
+	std::vector<std::array<size_t, LOG_CRITICALITY_COUNT>> _criticalityLoggerCounts;
+
 	std::set<Listener*> _listeners;
 	void NotifyUpdate();
 
@@ -173,6 +176,8 @@ public:
 	long FindLogger(const wxString& name) const { return _loggers.Find(name); }
 	long FindSource(const wxString& name) const { return _sources.Find(name); }
 
+	long GetLoggerEntryCount(long logger) const {return _loggersEntryCount[logger]; }
+	long GetLoggerCriticalityEntryCount(long logger, CRITICALITY_LEVEL criticality) const {return _criticalityLoggerCounts[logger][criticality]; }
 
 	void AddListener(Listener* listener) { _listeners.insert(listener); }
 	void RemListener(Listener* listener) { _listeners.erase(listener); }

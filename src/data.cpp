@@ -396,10 +396,16 @@ void LogData::SortAndReindexColumns()
 void LogData::UpdateStatistics()
 {
 	_criticalityCounts = { 0, 0, 0, 0, 0, 0, 0, 0 };
+	_loggersEntryCount.clear();
+	_loggersEntryCount.resize(_loggers.size(), 0);
+	_criticalityLoggerCounts.clear();
+	_criticalityLoggerCounts.resize(_loggers.size(), { 0, 0, 0, 0, 0, 0, 0, 0 });
 
 	for (auto& entry : _entries)
 	{
+		_loggersEntryCount[entry.logger]++;
 		_criticalityCounts[entry.criticality]++;
+		_criticalityLoggerCounts[entry.logger][entry.criticality]++;
 		/* TODO, count filtered criticalities by loggers, threads and sources */
 	}
 }

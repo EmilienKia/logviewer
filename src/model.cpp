@@ -154,10 +154,16 @@ wxString LoggerListModel::GetColumnType(unsigned int col)const
 		return "string";
 }
 
+static wxString wxFormatCount(long num) {
+	wxString str;
+	if (num != 0) {
+		str << num;
+	}
+	return str;
+}
 
 void LoggerListModel::GetValueByRow(wxVariant &variant, unsigned int row, unsigned int col) const
 {
-//	auto& entry = Get(row);
 	switch (col)
 	{
 	case LoggerListModel::SHOWN:
@@ -165,6 +171,30 @@ void LoggerListModel::GetValueByRow(wxVariant &variant, unsigned int row, unsign
 		return;
 	case LoggerListModel::LOGGER:
 		variant = GetData().GetLogData().GetLoggerLabel(row);
+		return;
+	case LoggerListModel::COUNT:
+		variant = wxFormatCount(GetData().GetLogData().GetLoggerEntryCount(row));
+		return;
+	case LoggerListModel::CRIT_FATAL:
+		variant = wxFormatCount(GetData().GetLogData().GetLoggerCriticalityEntryCount(row, LOG_FATAL));
+		return;
+	case LoggerListModel::CRIT_CRITICAL:
+		variant = wxFormatCount(GetData().GetLogData().GetLoggerCriticalityEntryCount(row, LOG_CRITICAL));
+		return;
+	case LoggerListModel::CRIT_ERROR:
+		variant = wxFormatCount(GetData().GetLogData().GetLoggerCriticalityEntryCount(row, LOG_ERROR));
+		return;
+	case LoggerListModel::CRIT_WARNING:
+		variant = wxFormatCount(GetData().GetLogData().GetLoggerCriticalityEntryCount(row, LOG_WARNING));
+		return;
+	case LoggerListModel::CRIT_INFO:
+		variant = wxFormatCount(GetData().GetLogData().GetLoggerCriticalityEntryCount(row, LOG_INFO));
+		return;
+	case LoggerListModel::CRIT_DEBUG:
+		variant = wxFormatCount(GetData().GetLogData().GetLoggerCriticalityEntryCount(row, LOG_DEBUG));
+		return;
+	case LoggerListModel::CRIT_TRACE:
+		variant = wxFormatCount(GetData().GetLogData().GetLoggerCriticalityEntryCount(row, LOG_TRACE));
 		return;
 	default:
 		return;
