@@ -71,12 +71,16 @@ void LogViewerApp::OnOpen(wxCommandEvent& event)
 
 	wxArrayString files;
 	fd.GetPaths(files);
-
-	Parser parser(GetLogData());
-	parser.ParseLogFiles(files);
+	OpenFiles(files);
 }
 
 void LogViewerApp::OnClear(wxCommandEvent& event)
 {
 	GetLogData().Clear();
+}
+
+void LogViewerApp::OpenFiles(const wxArrayString& files)
+{
+	Parser parser(GetLogData());
+	parser.ParseLogFiles(files);
 }

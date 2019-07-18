@@ -27,6 +27,7 @@
 #include <wx/datectrl.h>
 #include <wx/timectrl.h>
 #include <wx/dateevt.h>
+#include <wx/dnd.h>
 
 #include "frame.hpp"
 
@@ -41,7 +42,20 @@ static inline wxBitmap wxRibbonBmp(const wxArtID &id)
 	return wxArtIcon(id, 32);
 }
 
+//
+// Drop target
+//
 
+class FileDropTarget : public wxFileDropTarget
+{
+public:
+	FileDropTarget() = default;
+
+	virtual bool OnDropFiles (wxCoord x, wxCoord y, const wxArrayString &filenames) override
+	{
+		wxGetApp().OpenFiles(filenames);
+	}
+};
 
 //
 // DateTimeCtrl
@@ -258,6 +272,8 @@ void Frame::init()
 	}
 
 	_manager.Update();
+
+	SetDropTarget(new FileDropTarget);
 }
 
 void Frame::Updated(LogData& data)

@@ -45,6 +45,8 @@ public:
 	const FilteredLogData& GetFilteredLogData() const { return _filteredData; }
 	FilteredLogData& GetFilteredLogData() { return _filteredData; }
 
+	void OpenFiles(const wxArrayString& files);
+
 protected:
 	virtual bool OnInit();
 
