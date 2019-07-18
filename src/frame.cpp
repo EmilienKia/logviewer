@@ -221,7 +221,7 @@ void Frame::init()
 
 	// Log panel
 	{
-		_logs = new wxDataViewCtrl(this, ID_LV_LOGS);
+		_logs = new wxDataViewCtrl(this, ID_LV_LOGS, wxDefaultPosition, wxDefaultSize, wxDV_ROW_LINES);
 		_logs->AppendTextColumn("Criticality",	LogListModel::CRITICALITY,	wxDATAVIEW_CELL_INERT, -1, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE|wxDATAVIEW_COL_REORDERABLE);
 		_logs->AppendTextColumn("Date", 		LogListModel::DATE,			wxDATAVIEW_CELL_INERT, 180, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE|wxDATAVIEW_COL_REORDERABLE);
 		_logs->AppendTextColumn("Logger", 		LogListModel::LOGGER,		wxDATAVIEW_CELL_INERT, -1, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE|wxDATAVIEW_COL_REORDERABLE);
@@ -236,7 +236,7 @@ void Frame::init()
 
 	// Loggers
 	{
-		_loggers = new wxDataViewCtrl(this, ID_LV_LOGGER_LISTBOX);
+		_loggers = new wxDataViewCtrl(this, ID_LV_LOGGER_LISTBOX, wxDefaultPosition, wxDefaultSize, wxDV_HORIZ_RULES);
 		_loggers->AppendToggleColumn("",       LoggerListModel::SHOWN,         wxDATAVIEW_CELL_ACTIVATABLE, 32, wxALIGN_CENTER /*, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE*/);
 		_loggers->AppendTextColumn("Logger",   LoggerListModel::LOGGER,        wxDATAVIEW_CELL_INERT, 300, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
 		_loggers->AppendTextColumn("Total",    LoggerListModel::COUNT,         wxDATAVIEW_CELL_INERT, 48, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
