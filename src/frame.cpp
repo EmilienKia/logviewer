@@ -54,6 +54,7 @@ public:
 	virtual bool OnDropFiles (wxCoord x, wxCoord y, const wxArrayString &filenames) override
 	{
 		wxGetApp().OpenFiles(filenames);
+		return true;
 	}
 };
 
