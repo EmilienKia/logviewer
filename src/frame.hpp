@@ -26,6 +26,7 @@
 #include <wx/ribbon/bar.h>
 #include <wx/ribbon/buttonbar.h>
 #include <wx/log.h>
+#include <wx/srchctrl.h>
 
 #include "app.hpp"
 
@@ -58,6 +59,10 @@ enum {
 	ID_LV_SHOW_ALL_BUT_CURRENT_LOGGER,
 	ID_LV_FOCUS_PREVIOUS_CURRENT_LOGGER,
 	ID_LV_FOCUS_NEXT_CURRENT_LOGGER,
+
+	ID_LV_SEARCH_PANEL,
+	ID_LV_SEARCH_CTRL,
+
 };
 
 
@@ -121,6 +126,8 @@ protected:
 
 	wxTextCtrl*	_extraText;
 
+	wxSearchCtrl* _search;
+
 private:
 	void OnRibbonButtonClicked(wxEvent/*wxRibbonButtonBarEvent*/& event);
 
@@ -145,6 +152,8 @@ private:
 	void OnLoggerShowAllButCurrent(wxCommandEvent& event);
 	void OnLoggerFocusPrevious(wxCommandEvent& event);
 	void OnLoggerFocusNext(wxCommandEvent& event);
+
+	void OnSearch(wxCommandEvent& event);
 
 };
 

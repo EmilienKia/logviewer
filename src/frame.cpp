@@ -214,6 +214,14 @@ void Frame::init()
 				bar->AddButton(ID_LV_FOCUS_PREVIOUS_CURRENT_LOGGER, "Focus previous", wxRibbonBmp(wxART_GO_UP), "Focus previous entry with current logger");
 				bar->AddButton(ID_LV_FOCUS_NEXT_CURRENT_LOGGER, "Focus next", wxRibbonBmp(wxART_GO_DOWN), "Focus next entry with current logger");
 			}
+			{
+				wxRibbonPanel* panel = new wxRibbonPanel(page, ID_LV_SEARCH_PANEL, "Search");
+				_search = new wxSearchCtrl(panel, ID_LV_SEARCH_CTRL, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
+				_search->SetMinSize(wxSize(240, -1));
+				wxSizer* sz = new wxBoxSizer(wxVERTICAL);
+				sz->Add(_search, 0, wxEXPAND|wxALL, 2);
+				panel->SetSizer(sz);
+			}
 		}
 		_ribbon->Realise();
 		_manager.AddPane(_ribbon, wxAuiPaneInfo().Top().Floatable(false).CaptionVisible(false).CloseButton(false).BestSize(-1, 112).Show(true));
@@ -356,6 +364,8 @@ BEGIN_EVENT_TABLE(Frame, wxFrame)
 	EVT_MENU(ID_LV_SHOW_ALL_BUT_CURRENT_LOGGER, Frame::OnLoggerShowAllButCurrent)
 	EVT_MENU(ID_LV_FOCUS_PREVIOUS_CURRENT_LOGGER, Frame::OnLoggerFocusPrevious)
 	EVT_MENU(ID_LV_FOCUS_NEXT_CURRENT_LOGGER, Frame::OnLoggerFocusNext)
+
+	EVT_TEXT_ENTER(ID_LV_SEARCH_CTRL, Frame::OnSearch)
 END_EVENT_TABLE()
 
 void Frame::OnLoggersItemActivated(wxDataViewEvent& event)
@@ -534,4 +544,37 @@ void Frame::OnBeginDateEvent(wxDateEvent& event)
 void Frame::OnEndDateEvent(wxDateEvent& event)
 {
 	wxGetApp().GetFilteredLogData().SetEndDate(event.GetDate());
+}
+
+void Frame::OnSearch(wxCommandEvent& event)
+{
+	wxString str = event.GetString();
+
+	if(_logModel->Count()>0 && !str.IsEmpty()) // No search if no content nor nothing to search.
+	{
+		size_t cur = _logModel->Count();
+		if(_logs->GetSelectedItemsCount()>0)
+		{
+			cur = _logModel->GetRow(_logs->GetSelection());
+		}
+		size_t next = cur + 1;
+
+		while(next!=cur)
+		{
+			if(next>=_logModel->Count()) {
+				next = 0;
+			}
+
+			if(_logModel->Get(next).message.Find(str)!=wxNOT_FOUND)
+			{
+				wxDataViewItem item = _logModel->GetItem(next);
+				_logs->Select(item);
+				_logs->EnsureVisible(item);
+				break;
+			}
+
+			next++;
+		}
+
+	}
 }
