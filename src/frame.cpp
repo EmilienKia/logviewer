@@ -366,6 +366,9 @@ BEGIN_EVENT_TABLE(Frame, wxFrame)
 	EVT_MENU(ID_LV_FOCUS_NEXT_CURRENT_LOGGER, Frame::OnLoggerFocusNext)
 
 	EVT_TEXT_ENTER(ID_LV_SEARCH_CTRL, Frame::OnSearch)
+#if wxCHECK_VERSION(3, 1, 0)
+	EVT_SEARCH(ID_LV_SEARCH_CTRL, Frame::OnSearch)
+#endif // WX >= 3.1
 END_EVENT_TABLE()
 
 void Frame::OnLoggersItemActivated(wxDataViewEvent& event)
