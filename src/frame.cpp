@@ -220,6 +220,13 @@ void Frame::init()
 				_search->SetMinSize(wxSize(240, -1));
 				wxSizer* sz = new wxBoxSizer(wxVERTICAL);
 				sz->Add(_search, 0, wxEXPAND|wxALL, 2);
+
+				wxRibbonToolBar* tbar = new wxRibbonToolBar(panel);
+				tbar->AddToggleTool(ID_LV_SEARCH_DIRECTION_ASC, wxArtProvider::GetBitmap(wxART_GO_DOWN, wxART_MENU), "Search descending");
+				tbar->AddToggleTool(ID_LV_SEARCH_DIRECTION_DESC, wxArtProvider::GetBitmap(wxART_GO_UP, wxART_MENU), "Search ascending");
+				tbar->AddSeparator();
+
+				sz->Add(tbar, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 2);
 				panel->SetSizer(sz);
 			}
 		}
@@ -369,6 +376,10 @@ BEGIN_EVENT_TABLE(Frame, wxFrame)
 #if wxCHECK_VERSION(3, 1, 0)
 	EVT_SEARCH(ID_LV_SEARCH_CTRL, Frame::OnSearch)
 #endif // WX >= 3.1
+	EVT_UPDATE_UI(ID_LV_SEARCH_DIRECTION_ASC, Frame::OnSearchAscentUpdate)
+	EVT_UPDATE_UI(ID_LV_SEARCH_DIRECTION_DESC, Frame::OnSearchDescentUpdate)
+	EVT_RIBBONTOOLBAR_CLICKED(ID_LV_SEARCH_DIRECTION_ASC, Frame::OnSearchAscent)
+	EVT_RIBBONTOOLBAR_CLICKED(ID_LV_SEARCH_DIRECTION_DESC, Frame::OnSearchDescent)
 END_EVENT_TABLE()
 
 void Frame::OnLoggersItemActivated(wxDataViewEvent& event)
@@ -555,29 +566,79 @@ void Frame::OnSearch(wxCommandEvent& event)
 
 	if(_logModel->Count()>0 && !str.IsEmpty()) // No search if no content nor nothing to search.
 	{
-		size_t cur = _logModel->Count();
-		if(_logs->GetSelectedItemsCount()>0)
+		if(_searchDir) // Search ascent (from top to bottom)
 		{
-			cur = _logModel->GetRow(_logs->GetSelection());
-		}
-		size_t next = cur + 1;
-
-		while(next!=cur)
-		{
-			if(next>=_logModel->Count()) {
-				next = 0;
-			}
-
-			if(_logModel->Get(next).message.Find(str)!=wxNOT_FOUND)
+			size_t cur = _logModel->Count();
+			if(_logs->GetSelectedItemsCount()>0)
 			{
-				wxDataViewItem item = _logModel->GetItem(next);
-				_logs->Select(item);
-				_logs->EnsureVisible(item);
-				break;
+				cur = _logModel->GetRow(_logs->GetSelection());
+			}
+			size_t next = cur + 1;
+
+			while(next!=cur)
+			{
+				if(next>=_logModel->Count()) {
+					next = 0;
+				}
+
+				if(_logModel->Get(next).message.Find(str)!=wxNOT_FOUND)
+				{
+					wxDataViewItem item = _logModel->GetItem(next);
+					_logs->Select(item);
+					_logs->EnsureVisible(item);
+					break;
+				}
+
+				next++;
+			}
+		}
+		else // Search descent (from bottom to top)
+		{
+			size_t cur = 0;
+			if(_logs->GetSelectedItemsCount()>0)
+			{
+				cur = _logModel->GetRow(_logs->GetSelection());
 			}
 
-			next++;
+			size_t next = cur;
+
+			do
+			{
+				if(next == 0) {
+					next = _logModel->Count();
+				}
+				next--;
+
+				if(_logModel->Get(next).message.Find(str)!=wxNOT_FOUND)
+				{
+					wxDataViewItem item = _logModel->GetItem(next);
+					_logs->Select(item);
+					_logs->EnsureVisible(item);
+					break;
+				}
+			}
+			while(next!=cur);
 		}
 
 	}
+}
+
+void Frame::OnSearchAscent(wxRibbonToolBarEvent& event)
+{
+	_searchDir = true;
+}
+
+void Frame::OnSearchDescent(wxRibbonToolBarEvent& event)
+{
+	_searchDir = false;
+}
+
+void Frame::OnSearchAscentUpdate(wxUpdateUIEvent& event)
+{
+	event.Check(_searchDir);
+}
+
+void Frame::OnSearchDescentUpdate(wxUpdateUIEvent& event)
+{
+	event.Check(!_searchDir);
 }

@@ -25,6 +25,7 @@
 #include <wx/aui/auibook.h>
 #include <wx/ribbon/bar.h>
 #include <wx/ribbon/buttonbar.h>
+#include <wx/ribbon/toolbar.h>
 #include <wx/log.h>
 #include <wx/srchctrl.h>
 
@@ -62,6 +63,8 @@ enum {
 
 	ID_LV_SEARCH_PANEL,
 	ID_LV_SEARCH_CTRL,
+	ID_LV_SEARCH_DIRECTION_ASC,
+	ID_LV_SEARCH_DIRECTION_DESC,
 
 };
 
@@ -127,6 +130,7 @@ protected:
 	wxTextCtrl*	_extraText;
 
 	wxSearchCtrl* _search;
+	bool _searchDir = true;
 
 private:
 	void OnRibbonButtonClicked(wxEvent/*wxRibbonButtonBarEvent*/& event);
@@ -154,6 +158,10 @@ private:
 	void OnLoggerFocusNext(wxCommandEvent& event);
 
 	void OnSearch(wxCommandEvent& event);
+	void OnSearchAscent(wxRibbonToolBarEvent& event);
+	void OnSearchDescent(wxRibbonToolBarEvent& event);
+	void OnSearchAscentUpdate(wxUpdateUIEvent& event);
+	void OnSearchDescentUpdate(wxUpdateUIEvent& event);
 
 };
 
