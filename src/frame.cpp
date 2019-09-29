@@ -28,6 +28,8 @@
 #include <wx/timectrl.h>
 #include <wx/dateevt.h>
 #include <wx/dnd.h>
+#include <wx/sharedptr.h>
+#include <wx/regex.h>
 
 #include <algorithm>
 #include <string>
@@ -234,6 +236,7 @@ void Frame::init()
 				tbar->AddSeparator();
 				tbar->AddToggleTool(ID_LV_SEARCH_CASE_SENSITIVE, wxArtProvider::GetBitmap(wxART_FIND, wxART_MENU), "Case-sensitive search");
 				tbar->AddToggleTool(ID_LV_SEARCH_ESCAPE, wxArtProvider::GetBitmap(wxART_TICK_MARK, wxART_MENU), "Escape backslash (\\t...)");
+				tbar->AddToggleTool(ID_LV_SEARCH_REGEX, wxArtProvider::GetBitmap(wxART_TIP, wxART_MENU), "Find regex");
 
 				sz->Add(tbar, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 2);
 				panel->SetSizer(sz);
@@ -395,6 +398,8 @@ BEGIN_EVENT_TABLE(Frame, wxFrame)
 	EVT_RIBBONTOOLBAR_CLICKED(ID_LV_SEARCH_CASE_SENSITIVE, Frame::OnSearchCaseSensitive)
 	EVT_UPDATE_UI(ID_LV_SEARCH_ESCAPE, Frame::OnSearchEscapeUpdate)
 	EVT_RIBBONTOOLBAR_CLICKED(ID_LV_SEARCH_ESCAPE, Frame::OnSearchEscape)
+	EVT_UPDATE_UI(ID_LV_SEARCH_REGEX, Frame::OnSearchRegexUpdate)
+	EVT_RIBBONTOOLBAR_CLICKED(ID_LV_SEARCH_REGEX, Frame::OnSearchRegex)
 END_EVENT_TABLE()
 
 void Frame::OnLoggersItemActivated(wxDataViewEvent& event)
@@ -605,46 +610,79 @@ struct FindCaseInsensitive
 	}
 };
 
+struct FindRegex
+{
+	wxSharedPtr<wxRegEx> regex;
 
+	FindRegex(const wxString& part, bool caseSensitive):
+		regex( new wxRegEx(part, wxRE_EXTENDED| (caseSensitive ? 0 : wxRE_ICASE)))
+	{
+	}
+
+	bool IsValid()const
+	{
+		return ((bool)regex) && regex->IsValid();
+	}
+
+	bool operator()(const wxString& text)
+	{
+		return ((bool)regex) && regex->Matches(text);
+	}
+};
 
 void Frame::OnSearch(wxCommandEvent& event)
 {
 	wxString str = event.GetString();
-
-	if(_searchEscape) // Escape searched string
-	{
-		wxString escaped;
-		wxString::const_iterator it = str.begin();
-		while (it != str.end())
-		{
-			char c = *it++;
-			if (c == '\\' && it != str.end())
-			{
-				switch ((char)*it++) {
-				case 'a': c = '\a'; break;
-				case 'b': c = '\b'; break;
-				case 't': c = '\t'; break;
-				case 'n': c = '\n'; break;
-				case 'v': c = '\v'; break;
-				case 'f': c = '\f'; break;
-				case 'r': c = '\r'; break;
-				case '\\': c = '\\'; break;
-				// Other escapes ?
-				// Including numerics ?
-				default:
-					continue;
-				}
-			}
-			escaped += c;
-		}
-		str = escaped;
-	}
-
 	std::function<bool(const wxString&)> find;
-	if(_searchCaseSensitive)
-		find = FindCaseSensitive(str);
+
+	if(_searchRegex) // Search with regex
+	{
+		FindRegex findRegex(str, _searchCaseSensitive);
+		if(findRegex.IsValid())
+		{
+			find = findRegex;
+		}
+		else
+		{
+			return;
+		}
+	}
 	else
-		find = FindCaseInsensitive(str);
+	{
+		if(_searchEscape) // Escape searched string
+		{
+			wxString escaped;
+			wxString::const_iterator it = str.begin();
+			while (it != str.end())
+			{
+				char c = *it++;
+				if (c == '\\' && it != str.end())
+				{
+					switch ((char)*it++) {
+					case 'a': c = '\a'; break;
+					case 'b': c = '\b'; break;
+					case 't': c = '\t'; break;
+					case 'n': c = '\n'; break;
+					case 'v': c = '\v'; break;
+					case 'f': c = '\f'; break;
+					case 'r': c = '\r'; break;
+					case '\\': c = '\\'; break;
+					// Other escapes ?
+					// Including numerics ?
+					default:
+						continue;
+					}
+				}
+				escaped += c;
+			}
+			str = escaped;
+		}
+
+		if(_searchCaseSensitive)
+			find = FindCaseSensitive(str);
+		else
+			find = FindCaseInsensitive(str);
+	}
 
 	if(_logModel->Count()>0 && !str.IsEmpty()) // No search if no content nor nothing to search.
 	{
@@ -751,7 +789,6 @@ void Frame::OnSearchCaseSensitiveUpdate(wxUpdateUIEvent& event)
 	event.Check(_searchCaseSensitive);
 }
 
-
 void Frame::OnSearchEscape(wxRibbonToolBarEvent& event)
 {
 	_searchEscape = !_searchEscape;
@@ -760,4 +797,15 @@ void Frame::OnSearchEscape(wxRibbonToolBarEvent& event)
 void Frame::OnSearchEscapeUpdate(wxUpdateUIEvent& event)
 {
 	event.Check(_searchEscape);
+	event.Enable(!_searchRegex);
+}
+
+void Frame::OnSearchRegex(wxRibbonToolBarEvent& event)
+{
+	_searchRegex = !_searchRegex;
+}
+
+void Frame::OnSearchRegexUpdate(wxUpdateUIEvent& event)
+{
+	event.Check(_searchRegex);
 }

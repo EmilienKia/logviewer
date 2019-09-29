@@ -68,6 +68,7 @@ enum {
 	ID_LV_SEARCH_CYCLE,
 	ID_LV_SEARCH_CASE_SENSITIVE,
 	ID_LV_SEARCH_ESCAPE,
+	ID_LV_SEARCH_REGEX,
 
 };
 
@@ -137,6 +138,7 @@ protected:
 	bool _searchCycle = true;
 	bool _searchCaseSensitive = false;
 	bool _searchEscape = false;
+	bool _searchRegex = false;
 
 private:
 	void OnRibbonButtonClicked(wxEvent/*wxRibbonButtonBarEvent*/& event);
@@ -174,6 +176,8 @@ private:
 	void OnSearchCaseSensitiveUpdate(wxUpdateUIEvent& event);
 	void OnSearchEscape(wxRibbonToolBarEvent& event);
 	void OnSearchEscapeUpdate(wxUpdateUIEvent& event);
+	void OnSearchRegex(wxRibbonToolBarEvent& event);
+	void OnSearchRegexUpdate(wxUpdateUIEvent& event);
 
 };
 
