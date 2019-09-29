@@ -32,6 +32,7 @@
 #include <algorithm>
 #include <string>
 #include <cctype>
+#include <functional>
 
 #include "frame.hpp"
 
@@ -232,6 +233,7 @@ void Frame::init()
 				tbar->AddToggleTool(ID_LV_SEARCH_CYCLE, wxArtProvider::GetBitmap(wxART_GO_TO_PARENT, wxART_MENU), "Cycling search");
 				tbar->AddSeparator();
 				tbar->AddToggleTool(ID_LV_SEARCH_CASE_SENSITIVE, wxArtProvider::GetBitmap(wxART_FIND, wxART_MENU), "Case-sensitive search");
+				tbar->AddToggleTool(ID_LV_SEARCH_ESCAPE, wxArtProvider::GetBitmap(wxART_TICK_MARK, wxART_MENU), "Escape backslash (\\t...)");
 
 				sz->Add(tbar, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 2);
 				panel->SetSizer(sz);
@@ -391,6 +393,8 @@ BEGIN_EVENT_TABLE(Frame, wxFrame)
 	EVT_RIBBONTOOLBAR_CLICKED(ID_LV_SEARCH_CYCLE, Frame::OnSearchCycle)
 	EVT_UPDATE_UI(ID_LV_SEARCH_CASE_SENSITIVE, Frame::OnSearchCaseSensitiveUpdate)
 	EVT_RIBBONTOOLBAR_CLICKED(ID_LV_SEARCH_CASE_SENSITIVE, Frame::OnSearchCaseSensitive)
+	EVT_UPDATE_UI(ID_LV_SEARCH_ESCAPE, Frame::OnSearchEscapeUpdate)
+	EVT_RIBBONTOOLBAR_CLICKED(ID_LV_SEARCH_ESCAPE, Frame::OnSearchEscape)
 END_EVENT_TABLE()
 
 void Frame::OnLoggersItemActivated(wxDataViewEvent& event)
@@ -572,27 +576,75 @@ void Frame::OnEndDateEvent(wxDateEvent& event)
 }
 
 
-static bool FindCaseSensitive(const wxString& text, const wxString& part)
+struct FindCaseSensitive
 {
-	return text.Find(part)!=wxNOT_FOUND;
-}
+	wxString part;
 
-static bool FindCaseInsensitive(const wxString& text, const wxString& part)
+	FindCaseSensitive(const wxString& part):part(part){}
+
+	bool operator()(const wxString& text)
+	{
+		return text.Find(part)!=wxNOT_FOUND;
+	}
+};
+
+struct FindCaseInsensitive
 {
-	auto it = std::search(
-		text.begin(), text.end(),
-		part.begin(), part.end(),
-		[](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); }
-	);
-	return (it != text.end());
-}
+	wxString part;
+
+	FindCaseInsensitive(const wxString& part):part(part){}
+
+	bool operator()(const wxString& text)
+	{
+		auto it = std::search(
+			text.begin(), text.end(),
+			part.begin(), part.end(),
+			[](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); }
+		);
+		return (it != text.end());
+	}
+};
+
 
 
 void Frame::OnSearch(wxCommandEvent& event)
 {
 	wxString str = event.GetString();
 
-	auto find = _searchCaseSensitive ? FindCaseSensitive : FindCaseInsensitive;
+	if(_searchEscape) // Escape searched string
+	{
+		wxString escaped;
+		wxString::const_iterator it = str.begin();
+		while (it != str.end())
+		{
+			char c = *it++;
+			if (c == '\\' && it != str.end())
+			{
+				switch ((char)*it++) {
+				case 'a': c = '\a'; break;
+				case 'b': c = '\b'; break;
+				case 't': c = '\t'; break;
+				case 'n': c = '\n'; break;
+				case 'v': c = '\v'; break;
+				case 'f': c = '\f'; break;
+				case 'r': c = '\r'; break;
+				case '\\': c = '\\'; break;
+				// Other escapes ?
+				// Including numerics ?
+				default:
+					continue;
+				}
+			}
+			escaped += c;
+		}
+		str = escaped;
+	}
+
+	std::function<bool(const wxString&)> find;
+	if(_searchCaseSensitive)
+		find = FindCaseSensitive(str);
+	else
+		find = FindCaseInsensitive(str);
 
 	if(_logModel->Count()>0 && !str.IsEmpty()) // No search if no content nor nothing to search.
 	{
@@ -614,7 +666,7 @@ void Frame::OnSearch(wxCommandEvent& event)
 						break; // No cycle
 				}
 
-				if(find(_logModel->Get(next).message, str))
+				if(find(_logModel->Get(next).message))
 				{
 					wxDataViewItem item = _logModel->GetItem(next);
 					_logs->Select(item);
@@ -645,7 +697,7 @@ void Frame::OnSearch(wxCommandEvent& event)
 				}
 				next--;
 
-				if(find(_logModel->Get(next).message, str))
+				if(find(_logModel->Get(next).message))
 				{
 					wxDataViewItem item = _logModel->GetItem(next);
 					_logs->Select(item);
@@ -697,4 +749,15 @@ void Frame::OnSearchCaseSensitive(wxRibbonToolBarEvent& event)
 void Frame::OnSearchCaseSensitiveUpdate(wxUpdateUIEvent& event)
 {
 	event.Check(_searchCaseSensitive);
+}
+
+
+void Frame::OnSearchEscape(wxRibbonToolBarEvent& event)
+{
+	_searchEscape = !_searchEscape;
+}
+
+void Frame::OnSearchEscapeUpdate(wxUpdateUIEvent& event)
+{
+	event.Check(_searchEscape);
 }
