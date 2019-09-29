@@ -63,13 +63,13 @@ enum {
 
 	ID_LV_SEARCH_PANEL,
 	ID_LV_SEARCH_CTRL,
+	ID_LV_SEARCH_CTRL_FOCUS,
 	ID_LV_SEARCH_DIRECTION_ASC,
 	ID_LV_SEARCH_DIRECTION_DESC,
 	ID_LV_SEARCH_CYCLE,
 	ID_LV_SEARCH_CASE_SENSITIVE,
 	ID_LV_SEARCH_ESCAPE,
 	ID_LV_SEARCH_REGEX,
-
 };
 
 
@@ -178,6 +178,7 @@ private:
 	void OnSearchEscapeUpdate(wxUpdateUIEvent& event);
 	void OnSearchRegex(wxRibbonToolBarEvent& event);
 	void OnSearchRegexUpdate(wxUpdateUIEvent& event);
+	void OnSearchCtrlFocus(wxCommandEvent& event);
 
 };
 

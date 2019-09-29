@@ -314,6 +314,7 @@ void Frame::init()
 	entries.emplace_back(wxACCEL_CTRL, WXK_NUMPAD_SUBTRACT, ID_LV_SHOW_ALL_BUT_CURRENT_LOGGER);
 	entries.emplace_back(wxACCEL_CTRL | wxACCEL_SHIFT, WXK_NUMPAD_ADD, ID_LV_SHOW_ALL_LOGGERS);
 	entries.emplace_back(wxACCEL_CTRL | wxACCEL_SHIFT, WXK_NUMPAD_SUBTRACT, ID_LV_SHOW_NO_LOGGERS);
+	entries.emplace_back(wxACCEL_CTRL, 'F', ID_LV_SEARCH_CTRL_FOCUS);
 	wxAcceleratorTable accel(entries.size(), (wxAcceleratorEntry*) entries.data());
 	SetAcceleratorTable(accel);
 
@@ -405,6 +406,7 @@ BEGIN_EVENT_TABLE(Frame, wxFrame)
 #if wxCHECK_VERSION(3, 1, 0)
 	EVT_SEARCH(ID_LV_SEARCH_CTRL, Frame::OnSearch)
 #endif // WX >= 3.1
+	EVT_MENU(ID_LV_SEARCH_CTRL_FOCUS, Frame::OnSearchCtrlFocus)
 	EVT_UPDATE_UI(ID_LV_SEARCH_DIRECTION_ASC, Frame::OnSearchAscentUpdate)
 	EVT_UPDATE_UI(ID_LV_SEARCH_DIRECTION_DESC, Frame::OnSearchDescentUpdate)
 	EVT_RIBBONTOOLBAR_CLICKED(ID_LV_SEARCH_DIRECTION_ASC, Frame::OnSearchAscent)
@@ -825,4 +827,10 @@ void Frame::OnSearchRegex(wxRibbonToolBarEvent& event)
 void Frame::OnSearchRegexUpdate(wxUpdateUIEvent& event)
 {
 	event.Check(_searchRegex);
+}
+
+void Frame::OnSearchCtrlFocus(wxCommandEvent& event)
+{
+	_search->SetFocus();
+	_search->SelectAll();
 }
