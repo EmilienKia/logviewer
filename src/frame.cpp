@@ -29,6 +29,10 @@
 #include <wx/dateevt.h>
 #include <wx/dnd.h>
 
+#include <algorithm>
+#include <string>
+#include <cctype>
+
 #include "frame.hpp"
 
 
@@ -226,6 +230,8 @@ void Frame::init()
 				tbar->AddToggleTool(ID_LV_SEARCH_DIRECTION_DESC, wxArtProvider::GetBitmap(wxART_GO_UP, wxART_MENU), "Search ascending");
 				tbar->AddSeparator();
 				tbar->AddToggleTool(ID_LV_SEARCH_CYCLE, wxArtProvider::GetBitmap(wxART_GO_TO_PARENT, wxART_MENU), "Cycling search");
+				tbar->AddSeparator();
+				tbar->AddToggleTool(ID_LV_SEARCH_CASE_SENSITIVE, wxArtProvider::GetBitmap(wxART_FIND, wxART_MENU), "Case-sensitive search");
 
 				sz->Add(tbar, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 2);
 				panel->SetSizer(sz);
@@ -383,6 +389,8 @@ BEGIN_EVENT_TABLE(Frame, wxFrame)
 	EVT_RIBBONTOOLBAR_CLICKED(ID_LV_SEARCH_DIRECTION_DESC, Frame::OnSearchDescent)
 	EVT_UPDATE_UI(ID_LV_SEARCH_CYCLE, Frame::OnSearchCycleUpdate)
 	EVT_RIBBONTOOLBAR_CLICKED(ID_LV_SEARCH_CYCLE, Frame::OnSearchCycle)
+	EVT_UPDATE_UI(ID_LV_SEARCH_CASE_SENSITIVE, Frame::OnSearchCaseSensitiveUpdate)
+	EVT_RIBBONTOOLBAR_CLICKED(ID_LV_SEARCH_CASE_SENSITIVE, Frame::OnSearchCaseSensitive)
 END_EVENT_TABLE()
 
 void Frame::OnLoggersItemActivated(wxDataViewEvent& event)
@@ -563,9 +571,28 @@ void Frame::OnEndDateEvent(wxDateEvent& event)
 	wxGetApp().GetFilteredLogData().SetEndDate(event.GetDate());
 }
 
+
+static bool FindCaseSensitive(const wxString& text, const wxString& part)
+{
+	return text.Find(part)!=wxNOT_FOUND;
+}
+
+static bool FindCaseInsensitive(const wxString& text, const wxString& part)
+{
+	auto it = std::search(
+		text.begin(), text.end(),
+		part.begin(), part.end(),
+		[](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); }
+	);
+	return (it != text.end());
+}
+
+
 void Frame::OnSearch(wxCommandEvent& event)
 {
 	wxString str = event.GetString();
+
+	auto find = _searchCaseSensitive ? FindCaseSensitive : FindCaseInsensitive;
 
 	if(_logModel->Count()>0 && !str.IsEmpty()) // No search if no content nor nothing to search.
 	{
@@ -587,7 +614,7 @@ void Frame::OnSearch(wxCommandEvent& event)
 						break; // No cycle
 				}
 
-				if(_logModel->Get(next).message.Find(str)!=wxNOT_FOUND)
+				if(find(_logModel->Get(next).message, str))
 				{
 					wxDataViewItem item = _logModel->GetItem(next);
 					_logs->Select(item);
@@ -618,7 +645,7 @@ void Frame::OnSearch(wxCommandEvent& event)
 				}
 				next--;
 
-				if(_logModel->Get(next).message.Find(str)!=wxNOT_FOUND)
+				if(find(_logModel->Get(next).message, str))
 				{
 					wxDataViewItem item = _logModel->GetItem(next);
 					_logs->Select(item);
@@ -660,4 +687,14 @@ void Frame::OnSearchCycle(wxRibbonToolBarEvent& event)
 void Frame::OnSearchCycleUpdate(wxUpdateUIEvent& event)
 {
 	event.Check(_searchCycle);
+}
+
+void Frame::OnSearchCaseSensitive(wxRibbonToolBarEvent& event)
+{
+	_searchCaseSensitive = !_searchCaseSensitive;
+}
+
+void Frame::OnSearchCaseSensitiveUpdate(wxUpdateUIEvent& event)
+{
+	event.Check(_searchCaseSensitive);
 }

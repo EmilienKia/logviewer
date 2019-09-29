@@ -66,6 +66,7 @@ enum {
 	ID_LV_SEARCH_DIRECTION_ASC,
 	ID_LV_SEARCH_DIRECTION_DESC,
 	ID_LV_SEARCH_CYCLE,
+	ID_LV_SEARCH_CASE_SENSITIVE,
 
 };
 
@@ -133,6 +134,7 @@ protected:
 	wxSearchCtrl* _search;
 	bool _searchDir = true;
 	bool _searchCycle = true;
+	bool _searchCaseSensitive = false;
 
 private:
 	void OnRibbonButtonClicked(wxEvent/*wxRibbonButtonBarEvent*/& event);
@@ -166,6 +168,8 @@ private:
 	void OnSearchDescentUpdate(wxUpdateUIEvent& event);
 	void OnSearchCycle(wxRibbonToolBarEvent& event);
 	void OnSearchCycleUpdate(wxUpdateUIEvent& event);
+	void OnSearchCaseSensitive(wxRibbonToolBarEvent& event);
+	void OnSearchCaseSensitiveUpdate(wxUpdateUIEvent& event);
 
 };
 
