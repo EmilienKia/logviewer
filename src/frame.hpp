@@ -65,6 +65,7 @@ enum {
 	ID_LV_SEARCH_CTRL,
 	ID_LV_SEARCH_DIRECTION_ASC,
 	ID_LV_SEARCH_DIRECTION_DESC,
+	ID_LV_SEARCH_CYCLE,
 
 };
 
@@ -131,6 +132,7 @@ protected:
 
 	wxSearchCtrl* _search;
 	bool _searchDir = true;
+	bool _searchCycle = true;
 
 private:
 	void OnRibbonButtonClicked(wxEvent/*wxRibbonButtonBarEvent*/& event);
@@ -162,6 +164,8 @@ private:
 	void OnSearchDescent(wxRibbonToolBarEvent& event);
 	void OnSearchAscentUpdate(wxUpdateUIEvent& event);
 	void OnSearchDescentUpdate(wxUpdateUIEvent& event);
+	void OnSearchCycle(wxRibbonToolBarEvent& event);
+	void OnSearchCycleUpdate(wxUpdateUIEvent& event);
 
 };
 

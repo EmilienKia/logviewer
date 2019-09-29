@@ -225,6 +225,7 @@ void Frame::init()
 				tbar->AddToggleTool(ID_LV_SEARCH_DIRECTION_ASC, wxArtProvider::GetBitmap(wxART_GO_DOWN, wxART_MENU), "Search descending");
 				tbar->AddToggleTool(ID_LV_SEARCH_DIRECTION_DESC, wxArtProvider::GetBitmap(wxART_GO_UP, wxART_MENU), "Search ascending");
 				tbar->AddSeparator();
+				tbar->AddToggleTool(ID_LV_SEARCH_CYCLE, wxArtProvider::GetBitmap(wxART_GO_TO_PARENT, wxART_MENU), "Cycling search");
 
 				sz->Add(tbar, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 2);
 				panel->SetSizer(sz);
@@ -380,6 +381,8 @@ BEGIN_EVENT_TABLE(Frame, wxFrame)
 	EVT_UPDATE_UI(ID_LV_SEARCH_DIRECTION_DESC, Frame::OnSearchDescentUpdate)
 	EVT_RIBBONTOOLBAR_CLICKED(ID_LV_SEARCH_DIRECTION_ASC, Frame::OnSearchAscent)
 	EVT_RIBBONTOOLBAR_CLICKED(ID_LV_SEARCH_DIRECTION_DESC, Frame::OnSearchDescent)
+	EVT_UPDATE_UI(ID_LV_SEARCH_CYCLE, Frame::OnSearchCycleUpdate)
+	EVT_RIBBONTOOLBAR_CLICKED(ID_LV_SEARCH_CYCLE, Frame::OnSearchCycle)
 END_EVENT_TABLE()
 
 void Frame::OnLoggersItemActivated(wxDataViewEvent& event)
@@ -578,7 +581,10 @@ void Frame::OnSearch(wxCommandEvent& event)
 			while(next!=cur)
 			{
 				if(next>=_logModel->Count()) {
-					next = 0;
+					if(_searchCycle)
+						next = 0; // cycle
+					else
+						break; // No cycle
 				}
 
 				if(_logModel->Get(next).message.Find(str)!=wxNOT_FOUND)
@@ -605,7 +611,10 @@ void Frame::OnSearch(wxCommandEvent& event)
 			do
 			{
 				if(next == 0) {
-					next = _logModel->Count();
+					if(_searchCycle)
+						next = _logModel->Count(); // Cycle
+					else
+						break; // No cycle
 				}
 				next--;
 
@@ -641,4 +650,14 @@ void Frame::OnSearchAscentUpdate(wxUpdateUIEvent& event)
 void Frame::OnSearchDescentUpdate(wxUpdateUIEvent& event)
 {
 	event.Check(!_searchDir);
+}
+
+void Frame::OnSearchCycle(wxRibbonToolBarEvent& event)
+{
+	_searchCycle = !_searchCycle;
+}
+
+void Frame::OnSearchCycleUpdate(wxUpdateUIEvent& event)
+{
+	event.Check(_searchCycle);
 }
