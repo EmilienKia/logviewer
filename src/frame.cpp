@@ -35,6 +35,7 @@
 #include <string>
 #include <cctype>
 #include <functional>
+#include <vector>
 
 #include "frame.hpp"
 
@@ -301,6 +302,22 @@ void Frame::init()
 
 	_manager.Update();
 
+	// Accelerator table
+	std::vector<wxAcceleratorEntry> entries;
+	entries.emplace_back(wxACCEL_CTRL, 'O', wxID_OPEN);
+	entries.emplace_back(wxACCEL_ALT, WXK_RETURN, ID_LV_SHOW_EXTRA);
+	entries.emplace_back(wxACCEL_CTRL | wxACCEL_SHIFT, WXK_HOME, ID_LV_SET_BEGIN_DATE);
+	entries.emplace_back(wxACCEL_CTRL | wxACCEL_SHIFT, WXK_END, ID_LV_SET_END_DATE);
+	entries.emplace_back(wxACCEL_CTRL, WXK_UP, ID_LV_FOCUS_PREVIOUS_CURRENT_LOGGER);
+	entries.emplace_back(wxACCEL_CTRL, WXK_DOWN, ID_LV_FOCUS_NEXT_CURRENT_LOGGER);
+	entries.emplace_back(wxACCEL_CTRL, WXK_NUMPAD_ADD, ID_LV_SHOW_ONLY_CURRENT_LOGGER);
+	entries.emplace_back(wxACCEL_CTRL, WXK_NUMPAD_SUBTRACT, ID_LV_SHOW_ALL_BUT_CURRENT_LOGGER);
+	entries.emplace_back(wxACCEL_CTRL | wxACCEL_SHIFT, WXK_NUMPAD_ADD, ID_LV_SHOW_ALL_LOGGERS);
+	entries.emplace_back(wxACCEL_CTRL | wxACCEL_SHIFT, WXK_NUMPAD_SUBTRACT, ID_LV_SHOW_NO_LOGGERS);
+	wxAcceleratorTable accel(entries.size(), (wxAcceleratorEntry*) entries.data());
+	SetAcceleratorTable(accel);
+
+	// Drag and drop
 	SetDropTarget(new FileDropTarget);
 }
 
