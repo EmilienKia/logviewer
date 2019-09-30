@@ -315,6 +315,8 @@ void Frame::init()
 	entries.emplace_back(wxACCEL_CTRL | wxACCEL_SHIFT, WXK_NUMPAD_ADD, ID_LV_SHOW_ALL_LOGGERS);
 	entries.emplace_back(wxACCEL_CTRL | wxACCEL_SHIFT, WXK_NUMPAD_SUBTRACT, ID_LV_SHOW_NO_LOGGERS);
 	entries.emplace_back(wxACCEL_CTRL, 'F', ID_LV_SEARCH_CTRL_FOCUS);
+	entries.emplace_back(wxACCEL_NORMAL, WXK_F2, ID_LV_SEARCH_NEXT);
+	entries.emplace_back(wxACCEL_SHIFT, WXK_F2, ID_LV_SEARCH_PREV);
 	wxAcceleratorTable accel(entries.size(), (wxAcceleratorEntry*) entries.data());
 	SetAcceleratorTable(accel);
 
@@ -419,6 +421,8 @@ BEGIN_EVENT_TABLE(Frame, wxFrame)
 	EVT_RIBBONTOOLBAR_CLICKED(ID_LV_SEARCH_ESCAPE, Frame::OnSearchEscape)
 	EVT_UPDATE_UI(ID_LV_SEARCH_REGEX, Frame::OnSearchRegexUpdate)
 	EVT_RIBBONTOOLBAR_CLICKED(ID_LV_SEARCH_REGEX, Frame::OnSearchRegex)
+	EVT_MENU(ID_LV_SEARCH_NEXT, Frame::OnSearchNext)
+	EVT_MENU(ID_LV_SEARCH_PREV, Frame::OnSearchPrev)
 END_EVENT_TABLE()
 
 void Frame::OnLoggersItemActivated(wxDataViewEvent& event)
@@ -651,7 +655,12 @@ struct FindRegex
 
 void Frame::OnSearch(wxCommandEvent& event)
 {
-	wxString str = event.GetString();
+	Search(_searchDir);
+}
+
+void Frame::Search(bool dirNext)
+{
+	wxString str = _search->GetValue();
 	std::function<bool(const wxString&)> find;
 
 	if(_searchRegex) // Search with regex
@@ -705,7 +714,7 @@ void Frame::OnSearch(wxCommandEvent& event)
 
 	if(_logModel->Count()>0 && !str.IsEmpty()) // No search if no content nor nothing to search.
 	{
-		if(_searchDir) // Search ascent (from top to bottom)
+		if(dirNext) // Search ascent (from top to bottom)
 		{
 			size_t cur = _logModel->Count();
 			if(_logs->GetSelectedItemsCount()>0)
@@ -833,4 +842,14 @@ void Frame::OnSearchCtrlFocus(wxCommandEvent& event)
 {
 	_search->SetFocus();
 	_search->SelectAll();
+}
+
+void Frame::OnSearchNext(wxCommandEvent& event)
+{
+	SearchNext();
+}
+
+void Frame::OnSearchPrev(wxCommandEvent& event)
+{
+	SearchPrev();
 }

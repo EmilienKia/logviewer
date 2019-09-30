@@ -70,6 +70,8 @@ enum {
 	ID_LV_SEARCH_CASE_SENSITIVE,
 	ID_LV_SEARCH_ESCAPE,
 	ID_LV_SEARCH_REGEX,
+	ID_LV_SEARCH_NEXT,
+	ID_LV_SEARCH_PREV,
 };
 
 
@@ -106,6 +108,10 @@ public:
 	Frame();
 	~Frame();
 
+	void Search(bool dirNext = true);
+
+	void SearchNext(){Search(true);}
+	void SearchPrev(){Search(false);}
 
 protected:
 	void init();
@@ -179,6 +185,8 @@ private:
 	void OnSearchRegex(wxRibbonToolBarEvent& event);
 	void OnSearchRegexUpdate(wxUpdateUIEvent& event);
 	void OnSearchCtrlFocus(wxCommandEvent& event);
+	void OnSearchNext(wxCommandEvent& event);
+	void OnSearchPrev(wxCommandEvent& event);
 
 };
 
