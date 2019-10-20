@@ -1,4 +1,4 @@
-SUBDIRS = src po
+SUBDIRS = src po share
 
 dist_doc_DATA = \
 	README \

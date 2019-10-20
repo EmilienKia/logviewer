@@ -59,4 +59,8 @@ AC_OUTPUT([
 Makefile
 src/Makefile
 po/Makefile.in
+share/Makefile
+share/icons/Makefile
+share/icons/16/Makefile
+share/icons/32/Makefile
 ])

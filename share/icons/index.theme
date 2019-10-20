@@ -1,0 +1,16 @@
+[Icon Theme]
+Name=LogViewer
+Comment=Default iconset for LogViewer
+
+Directories=16,32
+
+[16]
+Context=Actions
+Size=16
+Type=Fixed
+
+[32]
+Context=Actions
+Size=32
+Type=Fixed
+
