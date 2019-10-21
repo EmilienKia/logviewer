@@ -24,12 +24,14 @@
 
 #include <wx/artprov.h>
 #include <wx/filedlg.h>
+#include <wx/stdpaths.h>
 
 #include <algorithm>
 //#include <execution>
 
 #include "app.hpp"
 #include "frame.hpp"
+#include "fdartprov.hpp"
 
 
 IMPLEMENT_APP(LogViewerApp)
@@ -42,6 +44,21 @@ LogViewerApp::LogViewerApp():
 
 bool LogViewerApp::OnInit()
 {
+    if(!wxApp::OnInit())
+        return false;
+
+    // Init all image handlers
+    wxInitAllImageHandlers();
+
+    // Plug additionnal art providers
+#ifdef ICONSETDIR
+	wxArtProvider::Push(new wxFreedesktopArtProvider(ICONSETDIR));
+#endif // ICONSETDIR
+#ifdef __UNIX__
+//    wxArtProvider::Push(new wxFreedesktopArtProvider("/usr/share/icons/gnome"));
+//    wxArtProvider::Push(new wxFreedesktopArtProvider(wxStandardPaths::Get().GetDataDir()+"/icons/hicolor"));
+#endif
+
 	SetAppName("LogViewer");
 	SetAppDisplayName("LogViewer");
 

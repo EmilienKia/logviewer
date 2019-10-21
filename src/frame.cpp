@@ -45,10 +45,16 @@ static inline wxBitmap wxArtIcon(const wxArtID &id, unsigned int sz)
 	return wxArtProvider::GetBitmap(id, wxART_OTHER, wxSize(sz,sz));
 }
 
-static inline wxBitmap wxRibbonBmp(const wxArtID &id)
+static inline wxBitmap wxRibbonBmp(const wxArtID &id, unsigned int sz = 32)
 {
-	return wxArtIcon(id, 32);
+	return wxArtIcon(id, sz);
 }
+
+static inline wxBitmap wxRibbonToolBmp(const wxArtID &id, unsigned int sz = 16)
+{
+	return wxArtIcon(id, sz);
+}
+
 
 //
 // Drop target
@@ -187,8 +193,8 @@ void Frame::init()
 			{
 				wxRibbonPanel* panel = new wxRibbonPanel(page, wxID_ANY, "Files");
 				wxRibbonButtonBar* bar = new wxRibbonButtonBar(panel, wxID_ANY);
-				bar->AddButton(wxID_OPEN, "Open", wxRibbonBmp(wxART_FILE_OPEN));
-				bar->AddButton(wxID_CLEAR, "Clear", wxRibbonBmp(wxART_NEW));
+				bar->AddButton(wxID_OPEN, "Open", wxRibbonBmp("document-open"));
+				bar->AddButton(wxID_CLEAR, "Clear", wxRibbonBmp("document-clear"));
 			}
 			{
 				wxRibbonPanel *panel = new wxRibbonPanel(page, wxID_ANY, "Criticality");
@@ -215,12 +221,12 @@ void Frame::init()
 			{
 				wxRibbonPanel* panel = new wxRibbonPanel(page, ID_LV_LOGGER_PANEL, "Loggers", wxNullBitmap, wxDefaultPosition, wxDefaultSize, wxRIBBON_PANEL_EXT_BUTTON);
 				wxRibbonButtonBar* bar = new wxRibbonButtonBar(panel, wxID_ANY);
-				bar->AddButton(ID_LV_SHOW_ALL_LOGGERS, "All loggers", wxRibbonBmp(wxART_TICK_MARK), "Show entries for all loggers");
-				bar->AddButton(ID_LV_SHOW_NO_LOGGERS, "No logger", wxRibbonBmp(wxART_CROSS_MARK), "Show entries for no logger (display nothing)");
-				bar->AddButton(ID_LV_SHOW_ONLY_CURRENT_LOGGER, "Only current logger", wxRibbonBmp(wxART_MINUS), "Show entries for logger of currently selected entry only");
-				bar->AddButton(ID_LV_SHOW_ALL_BUT_CURRENT_LOGGER, "All but current logger", wxRibbonBmp(wxART_PLUS), "Show entries for all loggers but currently selected entry");
-				bar->AddButton(ID_LV_FOCUS_PREVIOUS_CURRENT_LOGGER, "Focus previous", wxRibbonBmp(wxART_GO_UP), "Focus previous entry with current logger");
-				bar->AddButton(ID_LV_FOCUS_NEXT_CURRENT_LOGGER, "Focus next", wxRibbonBmp(wxART_GO_DOWN), "Focus next entry with current logger");
+				bar->AddButton(ID_LV_SHOW_ALL_LOGGERS, "All loggers", wxRibbonBmp("loggers-all"), "Show entries for all loggers");
+				bar->AddButton(ID_LV_SHOW_NO_LOGGERS, "No logger", wxRibbonBmp("loggers-none"), "Show entries for no logger (display nothing)");
+				bar->AddButton(ID_LV_SHOW_ONLY_CURRENT_LOGGER, "Only current logger", wxRibbonBmp("loggers-current-only"), "Show entries for logger of currently selected entry only");
+				bar->AddButton(ID_LV_SHOW_ALL_BUT_CURRENT_LOGGER, "All but current logger", wxRibbonBmp("loggers-no-current"), "Show entries for all loggers but currently selected entry");
+				bar->AddButton(ID_LV_FOCUS_PREVIOUS_CURRENT_LOGGER, "Focus previous", wxRibbonBmp("loggers-previous"), "Focus previous entry with current logger");
+				bar->AddButton(ID_LV_FOCUS_NEXT_CURRENT_LOGGER, "Focus next", wxRibbonBmp("loggers-next"), "Focus next entry with current logger");
 			}
 			{
 				wxRibbonPanel* panel = new wxRibbonPanel(page, ID_LV_SEARCH_PANEL, "Search");
@@ -230,14 +236,14 @@ void Frame::init()
 				sz->Add(_search, 0, wxEXPAND|wxALL, 2);
 
 				wxRibbonToolBar* tbar = new wxRibbonToolBar(panel);
-				tbar->AddToggleTool(ID_LV_SEARCH_DIRECTION_ASC, wxArtProvider::GetBitmap(wxART_GO_DOWN, wxART_MENU), "Search descending");
-				tbar->AddToggleTool(ID_LV_SEARCH_DIRECTION_DESC, wxArtProvider::GetBitmap(wxART_GO_UP, wxART_MENU), "Search ascending");
+				tbar->AddToggleTool(ID_LV_SEARCH_DIRECTION_ASC, wxRibbonToolBmp("search-forward"), "Search descending");
+				tbar->AddToggleTool(ID_LV_SEARCH_DIRECTION_DESC, wxRibbonToolBmp("search-back"), "Search ascending");
 				tbar->AddSeparator();
-				tbar->AddToggleTool(ID_LV_SEARCH_CYCLE, wxArtProvider::GetBitmap(wxART_GO_TO_PARENT, wxART_MENU), "Cycling search");
+				tbar->AddToggleTool(ID_LV_SEARCH_CYCLE, wxRibbonToolBmp("search-cycle"), "Cycling search");
 				tbar->AddSeparator();
-				tbar->AddToggleTool(ID_LV_SEARCH_CASE_SENSITIVE, wxArtProvider::GetBitmap(wxART_FIND, wxART_MENU), "Case-sensitive search");
-				tbar->AddToggleTool(ID_LV_SEARCH_ESCAPE, wxArtProvider::GetBitmap(wxART_TICK_MARK, wxART_MENU), "Escape backslash (\\t...)");
-				tbar->AddToggleTool(ID_LV_SEARCH_REGEX, wxArtProvider::GetBitmap(wxART_TIP, wxART_MENU), "Find regex");
+				tbar->AddToggleTool(ID_LV_SEARCH_CASE_SENSITIVE, wxRibbonToolBmp("search-case-sensitive"), "Case-sensitive search");
+				tbar->AddToggleTool(ID_LV_SEARCH_ESCAPE, wxRibbonToolBmp("search-escape"), "Escape backslash (\\t...)");
+				tbar->AddToggleTool(ID_LV_SEARCH_REGEX, wxRibbonToolBmp("search-regex"), "Find regex");
 
 				sz->Add(tbar, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 2);
 				panel->SetSizer(sz);
