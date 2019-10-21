@@ -158,7 +158,7 @@ void DateTimeCtrl::SendNotification()
 //
 
 Frame::Frame():
-wxFrame(NULL, wxID_ANY, wxGetApp().GetAppDisplayName(), wxDefaultPosition, wxSize(1024, 768)/*wxDefaultSize*/, wxDEFAULT_FRAME_STYLE)
+wxFrame(NULL, wxID_ANY, wxGetApp().GetAppDisplayName(), wxDefaultPosition, wxSize(1280, 768), wxDEFAULT_FRAME_STYLE)
 {
 	init();
 }
@@ -180,7 +180,7 @@ void Frame::init()
 
 	// Ribbon bar init
 	{
-		_ribbon = new wxRibbonBar(this, wxID_ANY, wxDefaultPosition, /*wxSize(800, 600)*/wxDefaultSize,
+		_ribbon = new wxRibbonBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize,
 								 wxRIBBON_BAR_FLOW_HORIZONTAL
 								| wxRIBBON_BAR_SHOW_PAGE_LABELS
 								| wxRIBBON_BAR_SHOW_PANEL_EXT_BUTTONS
@@ -207,7 +207,7 @@ void Frame::init()
 				panel->SetSizer(szr);
 			}
 			{
-				wxRibbonPanel *panel = new wxRibbonPanel(page, wxID_ANY, "Time frame");
+				wxRibbonPanel *panel = new wxRibbonPanel(page, wxID_ANY, "Time frame", wxNullBitmap, wxDefaultPosition, wxDefaultSize, wxRIBBON_PANEL_NO_AUTO_MINIMISE|wxRIBBON_PANEL_MINIMISE_BUTTON);
 				_begin = new DateTimeCtrl(panel, ID_LV_BEGIN_DATE, wxRibbonToolBmp("time-frame-begin-reset"));
 				_end   = new DateTimeCtrl(panel, ID_LV_END_DATE, wxRibbonToolBmp("time-frame-end-reset"));
 
@@ -229,9 +229,9 @@ void Frame::init()
 				bar->AddButton(ID_LV_FOCUS_NEXT_CURRENT_LOGGER, "Focus next", wxRibbonBmp("loggers-next"), "Focus next entry with current logger");
 			}
 			{
-				wxRibbonPanel* panel = new wxRibbonPanel(page, ID_LV_SEARCH_PANEL, "Search");
+				wxRibbonPanel* panel = new wxRibbonPanel(page, ID_LV_SEARCH_PANEL, "Search", wxNullBitmap, wxDefaultPosition, wxDefaultSize, wxRIBBON_PANEL_STRETCH);
 				_search = new wxSearchCtrl(panel, ID_LV_SEARCH_CTRL, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
-				_search->SetMinSize(wxSize(240, -1));
+				_search->SetMinSize(wxSize(96, -1));
 				wxSizer* sz = new wxBoxSizer(wxVERTICAL);
 				sz->Add(_search, 0, wxEXPAND|wxALL, 2);
 
