@@ -79,12 +79,12 @@ DateTimeCtrl::DateTimeCtrl()
 {
 }
 
-DateTimeCtrl::DateTimeCtrl(wxWindow *parent, wxWindowID id, const wxPoint &pos, const wxSize &size)
+DateTimeCtrl::DateTimeCtrl(wxWindow *parent, wxWindowID id, const wxBitmap &revert_bitmap, const wxPoint &pos, const wxSize &size)
 {
-	Create(parent, id, pos, size);
+	Create(parent, id, revert_bitmap, pos, size);
 }
 
-bool DateTimeCtrl::Create(wxWindow *parent, wxWindowID id, const wxPoint &pos, const wxSize &size)
+bool DateTimeCtrl::Create(wxWindow *parent, wxWindowID id, const wxBitmap &revert_bitmap, const wxPoint &pos, const wxSize &size)
 {
 	if(!wxWindow::Create(parent, id, pos, size, wxTAB_TRAVERSAL|wxBORDER_NONE|wxCLIP_CHILDREN|wxTRANSPARENT_WINDOW, "DateTimeCtrl"))
 	{
@@ -95,7 +95,7 @@ bool DateTimeCtrl::Create(wxWindow *parent, wxWindowID id, const wxPoint &pos, c
 	_time = new wxTimePickerCtrl(this, wxID_ANY);
 	szr->Add(_date, 1, wxALIGN_CENTER_VERTICAL|wxALL, 2);
 	szr->Add(_time, 1, wxALIGN_CENTER_VERTICAL|wxALL, 2);
-	szr->Add(new wxBitmapButton(this, wxID_REVERT, wxArtProvider::GetBitmap(wxART_CROSS_MARK, wxART_BUTTON)));
+	szr->Add(new wxBitmapButton(this, wxID_REVERT, revert_bitmap));
 	SetSizer(szr);
 	return true;
 }
@@ -208,8 +208,8 @@ void Frame::init()
 			}
 			{
 				wxRibbonPanel *panel = new wxRibbonPanel(page, wxID_ANY, "Time frame");
-				_begin = new DateTimeCtrl(panel, ID_LV_BEGIN_DATE);
-				_end   = new DateTimeCtrl(panel, ID_LV_END_DATE);
+				_begin = new DateTimeCtrl(panel, ID_LV_BEGIN_DATE, wxRibbonToolBmp("time-frame-begin-reset"));
+				_end   = new DateTimeCtrl(panel, ID_LV_END_DATE, wxRibbonToolBmp("time-frame-end-reset"));
 
 				wxFlexGridSizer* szr = new wxFlexGridSizer(2, 2, 2, 2);
 				szr->Add(new wxStaticText(panel, wxID_ANY, "From:", wxDefaultPosition, wxDefaultSize, wxTRANSPARENT_WINDOW), 1, wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL|wxALL, 2);

@@ -80,9 +80,9 @@ class DateTimeCtrl : public wxWindow
 	DECLARE_EVENT_TABLE()
 public:
 	DateTimeCtrl();
-	DateTimeCtrl(wxWindow *parent, wxWindowID id=wxID_ANY, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize);
+	DateTimeCtrl(wxWindow *parent, wxWindowID id, const wxBitmap &bitmap, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize);
 	virtual ~DateTimeCtrl() = default;
-	bool Create(wxWindow *parent, wxWindowID id=wxID_ANY, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize);
+	bool Create(wxWindow *parent, wxWindowID id, const wxBitmap &bitmap, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize);
 
 	wxDateTime GetValue()const {return _curr;}
 	void SetValue(const wxDateTime& date);
