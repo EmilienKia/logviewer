@@ -23,12 +23,41 @@
     <ClCompile Include="src\data.cpp" />
     <ClCompile Include="src\frame.cpp" />
     <ClCompile Include="src\model.cpp" />
+    <ClCompile Include="src\msrcartprov.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\app.hpp" />
     <ClInclude Include="src\data.hpp" />
     <ClInclude Include="src\frame.hpp" />
     <ClInclude Include="src\model.hpp" />
+    <ClInclude Include="src\msrcartprov.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="logviewer.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="icon1.ico" />
+    <Image Include="share\icons\16\search-back.png" />
+    <Image Include="share\icons\16\search-case-sensitive.png" />
+    <Image Include="share\icons\16\search-cycle.png" />
+    <Image Include="share\icons\16\search-escape.png" />
+    <Image Include="share\icons\16\search-forward.png" />
+    <Image Include="share\icons\16\search-regex.png" />
+    <Image Include="share\icons\32\document-clear.png" />
+    <Image Include="share\icons\32\document-open.png" />
+    <Image Include="share\icons\32\loggers-all.png" />
+    <Image Include="share\icons\32\loggers-current-only.png" />
+    <Image Include="share\icons\32\loggers-next.png" />
+    <Image Include="share\icons\32\loggers-no-current.png" />
+    <Image Include="share\icons\32\loggers-none.png" />
+    <Image Include="share\icons\32\loggers-previous.png" />
+    <Image Include="share\icons\32\loggers.png" />
+    <Image Include="share\icons\32\search.png" />
+    <Image Include="share\icons\32\time-frame-begin-reset.png" />
+    <Image Include="share\icons\32\time-frame-begin.png" />
+    <Image Include="share\icons\32\time-frame-end-reset.png" />
+    <Image Include="share\icons\32\time-frame-end.png" />
+    <Image Include="share\icons\32\time-frame.png" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

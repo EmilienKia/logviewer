@@ -32,6 +32,7 @@
 #include "app.hpp"
 #include "frame.hpp"
 #include "fdartprov.hpp"
+#include "msrcartprov.hpp"
 
 
 IMPLEMENT_APP(LogViewerApp)
@@ -57,6 +58,9 @@ bool LogViewerApp::OnInit()
 #ifdef __UNIX__
 //    wxArtProvider::Push(new wxFreedesktopArtProvider("/usr/share/icons/gnome"));
 //    wxArtProvider::Push(new wxFreedesktopArtProvider(wxStandardPaths::Get().GetDataDir()+"/icons/hicolor"));
+#endif
+#if __WXMSW__
+	wxArtProvider::Push(new wxMicrosoftResourceArtProvider);
 #endif
 
 	SetAppName("LogViewer");
