@@ -1,0 +1,14 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Name=Log file viwer
+Name[fr]=Visionneur de fichiers de journaux
+GenericName=Log viwer
+GenericName[fr]=Visionneur de journaux
+Comment=LogViewer log file viwer
+Comment[FR]=Visionneur de fichiers de journaux LogViewer
+Exec=logviewer
+Icon=logviewer
+Terminal=false
+Categories=Application;Development;Utility
