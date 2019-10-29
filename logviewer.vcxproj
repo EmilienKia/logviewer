@@ -36,7 +36,6 @@
     <ResourceCompile Include="logviewer.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="icon1.ico" />
     <Image Include="share\icons\16x16\actions\search-back.png" />
     <Image Include="share\icons\16x16\actions\search-case-sensitive.png" />
     <Image Include="share\icons\16x16\actions\search-cycle.png" />
@@ -58,6 +57,7 @@
     <Image Include="share\icons\32x32\actions\time-frame-end-reset.png" />
     <Image Include="share\icons\32x32\actions\time-frame-end.png" />
     <Image Include="share\icons\32x32\actions\time-frame.png" />
+    <Image Include="share\icons\logviewer.ico" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
