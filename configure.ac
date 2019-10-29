@@ -62,6 +62,8 @@ share/Makefile
 share/icons/Makefile
 share/icons/16x16/Makefile
 share/icons/16x16/actions/Makefile
+share/icons/16x16/apps/Makefile
 share/icons/32x32/Makefile
 share/icons/32x32/actions/Makefile
+share/icons/32x32/apps/Makefile
 ])
