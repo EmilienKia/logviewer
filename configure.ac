@@ -60,6 +60,8 @@ src/Makefile
 po/Makefile.in
 share/Makefile
 share/icons/Makefile
-share/icons/16/Makefile
-share/icons/32/Makefile
+share/icons/16x16/Makefile
+share/icons/16x16/actions/Makefile
+share/icons/32x32/Makefile
+share/icons/32x32/actions/Makefile
 ])

@@ -37,27 +37,27 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon1.ico" />
-    <Image Include="share\icons\16\search-back.png" />
-    <Image Include="share\icons\16\search-case-sensitive.png" />
-    <Image Include="share\icons\16\search-cycle.png" />
-    <Image Include="share\icons\16\search-escape.png" />
-    <Image Include="share\icons\16\search-forward.png" />
-    <Image Include="share\icons\16\search-regex.png" />
-    <Image Include="share\icons\32\document-clear.png" />
-    <Image Include="share\icons\32\document-open.png" />
-    <Image Include="share\icons\32\loggers-all.png" />
-    <Image Include="share\icons\32\loggers-current-only.png" />
-    <Image Include="share\icons\32\loggers-next.png" />
-    <Image Include="share\icons\32\loggers-no-current.png" />
-    <Image Include="share\icons\32\loggers-none.png" />
-    <Image Include="share\icons\32\loggers-previous.png" />
-    <Image Include="share\icons\32\loggers.png" />
-    <Image Include="share\icons\32\search.png" />
-    <Image Include="share\icons\32\time-frame-begin-reset.png" />
-    <Image Include="share\icons\32\time-frame-begin.png" />
-    <Image Include="share\icons\32\time-frame-end-reset.png" />
-    <Image Include="share\icons\32\time-frame-end.png" />
-    <Image Include="share\icons\32\time-frame.png" />
+    <Image Include="share\icons\16x16\actions\search-back.png" />
+    <Image Include="share\icons\16x16\actions\search-case-sensitive.png" />
+    <Image Include="share\icons\16x16\actions\search-cycle.png" />
+    <Image Include="share\icons\16x16\actions\search-escape.png" />
+    <Image Include="share\icons\16x16\actions\search-forward.png" />
+    <Image Include="share\icons\16x16\actions\search-regex.png" />
+    <Image Include="share\icons\32x32\actions\document-clear.png" />
+    <Image Include="share\icons\32x32\actions\document-open.png" />
+    <Image Include="share\icons\32x32\actions\loggers-all.png" />
+    <Image Include="share\icons\32x32\actions\loggers-current-only.png" />
+    <Image Include="share\icons\32x32\actions\loggers-next.png" />
+    <Image Include="share\icons\32x32\actions\loggers-no-current.png" />
+    <Image Include="share\icons\32x32\actions\loggers-none.png" />
+    <Image Include="share\icons\32x32\actions\loggers-previous.png" />
+    <Image Include="share\icons\32x32\actions\loggers.png" />
+    <Image Include="share\icons\32x32\actions\search.png" />
+    <Image Include="share\icons\32x32\actions\time-frame-begin-reset.png" />
+    <Image Include="share\icons\32x32\actions\time-frame-begin.png" />
+    <Image Include="share\icons\32x32\actions\time-frame-end-reset.png" />
+    <Image Include="share\icons\32x32\actions\time-frame-end.png" />
+    <Image Include="share\icons\32x32\actions\time-frame.png" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
