@@ -328,6 +328,9 @@ void Frame::init()
 
 	// Drag and drop
 	SetDropTarget(new FileDropTarget);
+
+	// Set frame icons
+	SetIcons(wxArtProvider::GetIconBundle("logviewer"));
 }
 
 void Frame::Updated(LogData& data)
