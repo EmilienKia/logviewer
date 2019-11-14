@@ -170,11 +170,12 @@ Frame::~Frame()
 
 void Frame::init()
 {
+	_status = CreateStatusBar();
+
 	_logModel = new LogListModel(wxGetApp().GetFilteredLogData());
 	_loggerModel = new LoggerListModel(wxGetApp().GetFilteredLogData());
+	_fileModel = new FileListModel(wxGetApp().GetFilteredLogData());
 	wxGetApp().GetLogData().AddListener(this);
-
-	_status = CreateStatusBar();
 
 	_manager.SetManagedWindow(this);
 
@@ -191,7 +192,7 @@ void Frame::init()
 		{
 			wxRibbonPage* page = new wxRibbonPage(_ribbon, wxID_ANY, "LogViewer");
 			{
-				wxRibbonPanel* panel = new wxRibbonPanel(page, wxID_ANY, "Files");
+				wxRibbonPanel* panel = new wxRibbonPanel(page, ID_LV_FILES_PANEL, "Files", wxNullBitmap, wxDefaultPosition, wxDefaultSize, wxRIBBON_PANEL_EXT_BUTTON);
 				wxRibbonButtonBar* bar = new wxRibbonButtonBar(panel, wxID_ANY);
 				bar->AddButton(wxID_OPEN, "Open", wxRibbonBmp("document-open"));
 				bar->AddButton(wxID_CLEAR, "Clear", wxRibbonBmp("document-clear"));
@@ -300,6 +301,24 @@ void Frame::init()
 		_manager.AddPane(_loggers, wxAuiPaneInfo().Left().Floatable().Dockable().Caption("Loggers").BestSize(200, -1).Hide());
 	}
 
+	// Files
+	{
+		_files = new wxDataViewCtrl(this, ID_LV_FILES_LISTBOX, wxDefaultPosition, wxDefaultSize, wxDV_HORIZ_RULES);
+		_files->AppendToggleColumn("",       FileListModel::SHOWN,         wxDATAVIEW_CELL_ACTIVATABLE, 32, wxALIGN_CENTER /*, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE*/);
+		_files->AppendTextColumn("File",     FileListModel::FILENAME,      wxDATAVIEW_CELL_INERT, 300, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
+		_files->AppendTextColumn("Total",    FileListModel::COUNT,         wxDATAVIEW_CELL_INERT, 48, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
+		_files->AppendTextColumn("Fatal",    FileListModel::CRIT_FATAL,    wxDATAVIEW_CELL_INERT, 48, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
+		_files->AppendTextColumn("Critical", FileListModel::CRIT_CRITICAL, wxDATAVIEW_CELL_INERT, 48, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
+		_files->AppendTextColumn("Error",    FileListModel::CRIT_ERROR,    wxDATAVIEW_CELL_INERT, 48, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
+		_files->AppendTextColumn("Warning",  FileListModel::CRIT_WARNING,  wxDATAVIEW_CELL_INERT, 48, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
+		_files->AppendTextColumn("Info",     FileListModel::CRIT_INFO,     wxDATAVIEW_CELL_INERT, 48, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
+		_files->AppendTextColumn("Debug",    FileListModel::CRIT_DEBUG,    wxDATAVIEW_CELL_INERT, 48, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
+		_files->AppendTextColumn("Trace",    FileListModel::CRIT_TRACE,    wxDATAVIEW_CELL_INERT, 48, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
+		_files->AssociateModel(_fileModel);
+		_manager.AddPane(_files, wxAuiPaneInfo().Left().Floatable().Dockable().Caption("Files").BestSize(200, -1).Hide());
+	}
+
+
 	// Extra panel
 	{
 		_extraText = new wxTextCtrl(this, ID_LV_EXTRA_TEXT, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE|wxTE_READONLY|wxTE_AUTO_URL|wxHSCROLL);
@@ -393,6 +412,8 @@ void Frame::Updated(LogData& data)
 }
 
 BEGIN_EVENT_TABLE(Frame, wxFrame)
+	EVT_RIBBONPANEL_EXTBUTTON_ACTIVATED(ID_LV_FILES_PANEL, Frame::OnFilesExtButtonActivated)
+
 	EVT_DATAVIEW_SELECTION_CHANGED(ID_LV_LOGS, Frame::OnLogSelChanged)
 	EVT_DATAVIEW_ITEM_ACTIVATED(ID_LV_LOGS, Frame::OnLogActivated)
 	EVT_DATAVIEW_ITEM_CONTEXT_MENU(ID_LV_LOGS, Frame::OnLogContextMenu)
@@ -433,6 +454,12 @@ BEGIN_EVENT_TABLE(Frame, wxFrame)
 	EVT_MENU(ID_LV_SEARCH_NEXT, Frame::OnSearchNext)
 	EVT_MENU(ID_LV_SEARCH_PREV, Frame::OnSearchPrev)
 END_EVENT_TABLE()
+
+void Frame::OnFilesExtButtonActivated(wxRibbonPanelEvent& event)
+{
+	_manager.GetPane(_files).Show();
+	_manager.Update();
+}
 
 void Frame::OnLoggersItemActivated(wxDataViewEvent& event)
 {

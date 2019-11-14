@@ -232,3 +232,100 @@ long LoggerListModel::GetLoggerId(wxDataViewItem item)const
 {
 	return GetRow(item);
 }
+
+
+
+//
+// File List Model
+//
+
+FileListModel::FileListModel(FilteredLogData& data) :
+	_data(data)
+{
+	data.AddListener(this);
+}
+
+unsigned int FileListModel::GetColumnCount()const
+{
+	return FileListModel::COLUMN_COUNT;
+}
+
+wxString FileListModel::GetColumnType(unsigned int col)const
+{
+	if (col == FileListModel::SHOWN)
+		return "bool";
+	else
+		return "string";
+}
+
+void FileListModel::GetValueByRow(wxVariant &variant, unsigned int row, unsigned int col) const
+{
+	switch (col)
+	{
+	case FileListModel::SHOWN:
+		variant = true;// GetData().IsLoggerShown(row);
+		return;
+	case FileListModel::FILENAME:
+		variant = GetData().GetLogData().GetFile(row).path;
+		return;
+	case FileListModel::COUNT:
+		variant = wxFormatCount(GetData().GetLogData().GetFileEntryCount(row));
+		return;
+	case FileListModel::CRIT_FATAL:
+		variant = wxFormatCount(GetData().GetLogData().GetFileCriticalityEntryCount(row, LOG_FATAL));
+		return;
+	case FileListModel::CRIT_CRITICAL:
+		variant = wxFormatCount(GetData().GetLogData().GetFileCriticalityEntryCount(row, LOG_CRITICAL));
+		return;
+	case FileListModel::CRIT_ERROR:
+		variant = wxFormatCount(GetData().GetLogData().GetFileCriticalityEntryCount(row, LOG_ERROR));
+		return;
+	case FileListModel::CRIT_WARNING:
+		variant = wxFormatCount(GetData().GetLogData().GetFileCriticalityEntryCount(row, LOG_WARNING));
+		return;
+	case FileListModel::CRIT_INFO:
+		variant = wxFormatCount(GetData().GetLogData().GetFileCriticalityEntryCount(row, LOG_INFO));
+		return;
+	case FileListModel::CRIT_DEBUG:
+		variant = wxFormatCount(GetData().GetLogData().GetFileCriticalityEntryCount(row, LOG_DEBUG));
+		return;
+	case FileListModel::CRIT_TRACE:
+		variant = wxFormatCount(GetData().GetLogData().GetFileCriticalityEntryCount(row, LOG_TRACE));
+		return;
+	default:
+		return;
+	}
+}
+
+bool FileListModel::GetAttrByRow(unsigned int row, unsigned int col, wxDataViewItemAttr &attr)const
+{
+	return false;
+}
+
+bool FileListModel::SetValueByRow(const wxVariant &variant, unsigned int row, unsigned int col)
+{
+#if 0
+	if (col == LoggerListModel::SHOWN)
+	{
+		GetData().DisplayLogger(row, variant.GetBool());
+		return true;
+	}
+#endif
+	return false;
+}
+
+void FileListModel::Update()
+{
+	long count = GetData().GetLogData().GetFileCount();
+	Reset(count);
+}
+
+void FileListModel::Updated(FilteredLogData& data)
+{
+	Update();
+}
+
+uint16_t FileListModel::GetFileId(wxDataViewItem item)const
+{
+	return GetRow(item);
+}

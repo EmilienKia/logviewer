@@ -72,6 +72,9 @@ enum {
 	ID_LV_SEARCH_REGEX,
 	ID_LV_SEARCH_NEXT,
 	ID_LV_SEARCH_PREV,
+
+	ID_LV_FILES_PANEL,
+	ID_LV_FILES_LISTBOX
 };
 
 
@@ -80,9 +83,9 @@ class DateTimeCtrl : public wxWindow
 	DECLARE_EVENT_TABLE()
 public:
 	DateTimeCtrl();
-	DateTimeCtrl(wxWindow *parent, wxWindowID id, const wxBitmap &bitmap, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize);
+	DateTimeCtrl(wxWindow *parent, wxWindowID id, const wxBitmap &revert_bitmap, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize);
 	virtual ~DateTimeCtrl() = default;
-	bool Create(wxWindow *parent, wxWindowID id, const wxBitmap &bitmap, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize);
+	bool Create(wxWindow *parent, wxWindowID id, const wxBitmap &revert_bitmap, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize);
 
 	wxDateTime GetValue()const {return _curr;}
 	void SetValue(const wxDateTime& date);
@@ -126,9 +129,11 @@ protected:
 
 	LogListModel* _logModel;
 	LoggerListModel* _loggerModel;
+	FileListModel* _fileModel;
 
 	wxDataViewCtrl* _logs;
 	wxDataViewCtrl* _loggers;
+	wxDataViewCtrl* _files;
 	wxStatusBar* _status;
 
 	wxSlider*		_criticalitySlider;
@@ -188,6 +193,7 @@ private:
 	void OnSearchNext(wxCommandEvent& event);
 	void OnSearchPrev(wxCommandEvent& event);
 
+	void OnFilesExtButtonActivated(wxRibbonPanelEvent& event);
 };
 
 #endif // _FRAME_HPP_

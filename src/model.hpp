@@ -116,4 +116,50 @@ protected:
 };
 
 
+
+class FileListModel : public wxDataViewVirtualListModel, protected FilteredLogData::Listener
+{
+public:
+	FileListModel(FilteredLogData& data);
+
+	const FilteredLogData& GetData() const { return _data; }
+	FilteredLogData& GetData() { return _data; }
+
+	// DVVLM definitions:
+	virtual unsigned int GetColumnCount()const;
+	virtual wxString GetColumnType(unsigned int col)const;
+
+	virtual void GetValueByRow(wxVariant &variant, unsigned int row, unsigned int col) const;
+	virtual bool SetValueByRow(const wxVariant &variant, unsigned int row, unsigned int col);
+	virtual bool GetAttrByRow(unsigned int row, unsigned int col, wxDataViewItemAttr &attr)const;
+
+	// Model definition
+	enum FileListModelColumns {
+		SHOWN,
+		FILENAME,
+
+		COUNT,
+
+		CRIT_FATAL,
+		CRIT_CRITICAL,
+		CRIT_ERROR,
+		CRIT_WARNING,
+		CRIT_INFO,
+		CRIT_DEBUG,
+		CRIT_TRACE,
+
+		COLUMN_COUNT
+	};
+
+	// Model helpers
+	uint16_t GetFileId(wxDataViewItem item)const;
+
+protected:
+	void Update();
+	virtual void Updated(FilteredLogData& data) override;
+
+	FilteredLogData& _data;
+};
+
+
 #endif /* _MODEL_HPP_ */

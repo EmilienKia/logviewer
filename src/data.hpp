@@ -70,6 +70,7 @@ enum CRITICALITY_LEVEL
 struct Entry
 {
 	wxDateTime date;
+	uint16_t file;
 	CRITICALITY_LEVEL criticality;
 	long thread;
 	long logger;
@@ -79,6 +80,17 @@ struct Entry
 };
 
 
+struct FileDescriptor
+{
+	FileDescriptor(uint16_t id, wxString path):id(id), path(path) {}
+	FileDescriptor(const FileDescriptor& fd):id(fd.id), path(fd.path), entryCount(fd.entryCount), criticalityCounts(fd.criticalityCounts) {}
+
+	uint16_t id;
+	wxString path;
+	size_t entryCount;
+	std::array<size_t, LOG_CRITICALITY_COUNT> criticalityCounts;
+};
+
 
 class Parser
 {
@@ -86,6 +98,8 @@ protected:
 	LogData & _data;
 
 	wxString _tempExtra;
+
+	FileDescriptor* _fileDesc;
 
 	void ParseLogLine(const wxString& line);
 
@@ -124,6 +138,8 @@ public:
 	};
 
 protected:
+	std::vector<FileDescriptor> _fileDescriptors;
+
 	wxStringCache _threads, _loggers, _sources;
 
 	std::vector<Entry> _entries;
@@ -139,8 +155,8 @@ protected:
 public:
 	LogData();
 	void Clear();
-	void AddLog(const wxDateTime& date, CRITICALITY_LEVEL criticality, wxString thread, wxString logger, wxString source, wxString message);
-	void AddLog(const wxDateTime& date, CRITICALITY_LEVEL criticality, long thread, long logger, long source, const wxString& message);
+	void AddLog(const wxDateTime& date, uint16_t file, CRITICALITY_LEVEL criticality, wxString thread, wxString logger, wxString source, wxString message);
+	void AddLog(const wxDateTime& date, uint16_t file, CRITICALITY_LEVEL criticality, long thread, long logger, long source, const wxString& message);
 
 	void Synchronize();
 
@@ -178,6 +194,14 @@ public:
 
 	long GetLoggerEntryCount(long logger) const {return _loggersEntryCount[logger]; }
 	long GetLoggerCriticalityEntryCount(long logger, CRITICALITY_LEVEL criticality) const {return _criticalityLoggerCounts[logger][criticality]; }
+
+	size_t GetFileCount()const {return _fileDescriptors.size();}
+	FileDescriptor& GetFile(const wxString& file);
+	FileDescriptor& GetFile(uint16_t id);
+	const FileDescriptor& GetFile(uint16_t id)const;
+
+	long GetFileEntryCount(uint16_t fileid) const {return GetFile(fileid).entryCount; }
+	long GetFileCriticalityEntryCount(uint16_t fileid, CRITICALITY_LEVEL criticality) const {return GetFile(fileid).criticalityCounts[criticality]; }
 
 	void AddListener(Listener* listener) { _listeners.insert(listener); }
 	void RemListener(Listener* listener) { _listeners.erase(listener); }

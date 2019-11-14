@@ -55,6 +55,7 @@ void Parser::ParseLogFile(const wxString& path)
 		return;
 	}
 
+	_fileDesc = &_data.GetFile(path);
 	_tempExtra.Empty();
 
 	wxTextInputStream text(file);
@@ -63,6 +64,8 @@ void Parser::ParseLogFile(const wxString& path)
 		ParseLogLine(text.ReadLine());
 	}
 	AppendExtraLine();
+
+	_fileDesc = nullptr;
 }
 
 
@@ -129,6 +132,7 @@ void Parser::AddLogLine(wxString date, wxString criticality, wxString thread, wx
 	AppendExtraLine();
 	_data.AddLog(
 		ParseDate(date.Trim(false).Trim(true)),
+		_fileDesc->id,
 		ParseCriticality(criticality.Trim(false)),
 		thread,
 		logger,
@@ -142,6 +146,7 @@ void Parser::AddLogLine(wxString date, wxString logger, wxString message)
 	AppendExtraLine();
 	_data.AddLog(
 		ParseDate(date.Trim(false).Trim(true)),
+		_fileDesc->id,
 		CRITICALITY_LEVEL::LOG_INFO,
 		"",
 		logger.Trim(false).Trim(true),
@@ -311,19 +316,20 @@ void LogData::Clear()
 	Synchronize();
 }
 
-void LogData::AddLog(const wxDateTime& date, CRITICALITY_LEVEL criticality, wxString thread, wxString logger, wxString source, wxString message)
+void LogData::AddLog(const wxDateTime& date, uint16_t file, CRITICALITY_LEVEL criticality, wxString thread, wxString logger, wxString source, wxString message)
 {
-	AddLog(date, criticality,
+	AddLog(date, file, criticality,
 		_threads.Get(thread.Trim(false).Trim(true)),
 		_loggers.Get(logger.Trim(false).Trim(true)),
 		_sources.Get(source.Trim(false).Trim(true)),
 		message.Trim(false).Trim(true));
 }
 
-void LogData::AddLog(const wxDateTime& date, CRITICALITY_LEVEL criticality, long thread, long logger, long source, const wxString& message)
+void LogData::AddLog(const wxDateTime& date, uint16_t file, CRITICALITY_LEVEL criticality, long thread, long logger, long source, const wxString& message)
 {
 	_entries.push_back({
 		date,
+		file,
 		criticality,
 		thread,
 		logger,
@@ -401,11 +407,20 @@ void LogData::UpdateStatistics()
 	_criticalityLoggerCounts.clear();
 	_criticalityLoggerCounts.resize(_loggers.size(), { 0, 0, 0, 0, 0, 0, 0, 0 });
 
+	for(FileDescriptor& desc : _fileDescriptors)
+	{
+		desc.entryCount = 0;
+		desc.criticalityCounts = { 0, 0, 0, 0, 0, 0, 0, 0 };
+	}
+
 	for (auto& entry : _entries)
 	{
 		_loggersEntryCount[entry.logger]++;
 		_criticalityCounts[entry.criticality]++;
 		_criticalityLoggerCounts[entry.logger][entry.criticality]++;
+		_fileDescriptors[entry.file].entryCount++;
+		_fileDescriptors[entry.file].criticalityCounts[entry.criticality]++;
+
 		/* TODO, count filtered criticalities by loggers, threads and sources */
 	}
 }
@@ -430,6 +445,27 @@ wxDateTime LogData::GetEndDate()const
 	return EntryCount()>0 ? GetEntry(EntryCount() - 1).date : wxDateTime();
 }
 
+
+FileDescriptor& LogData::GetFile(const wxString& file)
+{
+	for(auto& fd : _fileDescriptors) {
+		if(fd.path == file) {
+			return fd;
+		}
+	}
+	_fileDescriptors.emplace_back(_fileDescriptors.size(), file);
+	return _fileDescriptors.back();
+}
+
+FileDescriptor& LogData::GetFile(uint16_t id)
+{
+	return _fileDescriptors[id];
+}
+
+const FileDescriptor& LogData::GetFile(uint16_t id)const 
+{
+	return _fileDescriptors[id];
+}
 
 //
 // FilteredLogData
