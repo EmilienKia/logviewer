@@ -305,7 +305,8 @@ void Frame::init()
 	{
 		_files = new wxDataViewCtrl(this, ID_LV_FILES_LISTBOX, wxDefaultPosition, wxDefaultSize, wxDV_HORIZ_RULES);
 		_files->AppendToggleColumn("",       FileListModel::SHOWN,         wxDATAVIEW_CELL_ACTIVATABLE, 32, wxALIGN_CENTER /*, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE*/);
-		_files->AppendTextColumn("File",     FileListModel::FILENAME,      wxDATAVIEW_CELL_INERT, 300, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
+		_files->AppendTextColumn("File",     FileListModel::FILENAME,      wxDATAVIEW_CELL_INERT, 300, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE)
+			->GetRenderer()->EnableEllipsize(wxELLIPSIZE_START);
 		_files->AppendTextColumn("Total",    FileListModel::COUNT,         wxDATAVIEW_CELL_INERT, 48, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
 		_files->AppendTextColumn("Fatal",    FileListModel::CRIT_FATAL,    wxDATAVIEW_CELL_INERT, 48, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
 		_files->AppendTextColumn("Critical", FileListModel::CRIT_CRITICAL, wxDATAVIEW_CELL_INERT, 48, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
