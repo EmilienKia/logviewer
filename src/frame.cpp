@@ -413,19 +413,22 @@ void Frame::Updated(LogData& data)
 }
 
 BEGIN_EVENT_TABLE(Frame, wxFrame)
-	EVT_RIBBONPANEL_EXTBUTTON_ACTIVATED(ID_LV_FILES_PANEL, Frame::OnFilesExtButtonActivated)
+	EVT_CUSTOM(wxEVT_COMMAND_RIBBONBUTTON_CLICKED, wxID_ANY, Frame::OnRibbonButtonClicked)
 
 	EVT_DATAVIEW_SELECTION_CHANGED(ID_LV_LOGS, Frame::OnLogSelChanged)
 	EVT_DATAVIEW_ITEM_ACTIVATED(ID_LV_LOGS, Frame::OnLogActivated)
 	EVT_DATAVIEW_ITEM_CONTEXT_MENU(ID_LV_LOGS, Frame::OnLogContextMenu)
 
-	EVT_CUSTOM(wxEVT_COMMAND_RIBBONBUTTON_CLICKED, wxID_ANY, Frame::OnRibbonButtonClicked)
+	EVT_RIBBONPANEL_EXTBUTTON_ACTIVATED(ID_LV_FILES_PANEL, Frame::OnFilesExtButtonActivated)
+	EVT_DATAVIEW_ITEM_ACTIVATED(ID_LV_FILES_LISTBOX, Frame::OnFilesItemActivated)
+
 	EVT_SLIDER(wxID_ANY, Frame::OnCriticalitySliderEvent)
 	EVT_DATE_CHANGED(ID_LV_BEGIN_DATE, Frame::OnBeginDateEvent)
 	EVT_DATE_CHANGED(ID_LV_END_DATE, Frame::OnEndDateEvent)
 	EVT_MENU(ID_LV_SHOW_EXTRA, Frame::OnDisplayExtra)
 	EVT_MENU(ID_LV_SET_BEGIN_DATE, Frame::OnSetAsBegin)
 	EVT_MENU(ID_LV_SET_END_DATE, Frame::OnSetAsEnd)
+
 	EVT_RIBBONPANEL_EXTBUTTON_ACTIVATED(ID_LV_LOGGER_PANEL, Frame::OnLoggersExtButtonActivated)
 	EVT_DATAVIEW_ITEM_ACTIVATED(ID_LV_LOGGER_LISTBOX, Frame::OnLoggersItemActivated)
 	EVT_MENU(ID_LV_SHOW_ALL_LOGGERS, Frame::OnLoggerShowAll)
@@ -460,6 +463,12 @@ void Frame::OnFilesExtButtonActivated(wxRibbonPanelEvent& event)
 {
 	_manager.GetPane(_files).Show();
 	_manager.Update();
+}
+
+void Frame::OnFilesItemActivated(wxDataViewEvent& event)
+{
+	uint16_t file = _fileModel->GetFileId(event.GetItem());
+	_loggerModel->GetData().ToggleFile(file);
 }
 
 void Frame::OnLoggersItemActivated(wxDataViewEvent& event)

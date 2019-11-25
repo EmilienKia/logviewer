@@ -199,6 +199,7 @@ public:
 	FileDescriptor& GetFile(const wxString& file);
 	FileDescriptor& GetFile(uint16_t id);
 	const FileDescriptor& GetFile(uint16_t id)const;
+	const FileDescriptor* FindFile(const wxString& file)const;
 
 	long GetFileEntryCount(uint16_t fileid) const {return GetFile(fileid).entryCount; }
 	long GetFileCriticalityEntryCount(uint16_t fileid, CRITICALITY_LEVEL criticality) const {return GetFile(fileid).criticalityCounts[criticality]; }
@@ -222,7 +223,7 @@ protected:
 	std::vector<long> _data;
 	std::array<size_t, LOG_CRITICALITY_COUNT> _criticalityCounts;
 
-	std::vector<bool> _shownLoggers;
+	std::vector<bool> _shownLoggers, _shownFiles;
 
 	CRITICALITY_LEVEL _criticality = CRITICALITY_LEVEL::LOG_INFO;
 	wxDateTime _start, _end;
@@ -271,6 +272,16 @@ public:
 
 	bool IsLoggerShown(const wxString& logger)const;
 	bool IsLoggerShown(long logger)const;
+
+	void DisplayAllFiles();
+	void HideAllFiles();
+	void DisplayFile(const wxString& file, bool display = true);
+	void DisplayFile(uint16_t file, bool display = true);
+	void ToggleFile(uint16_t file);
+
+	bool IsFileShown(const wxString& file)const;
+	bool IsFileShown(uint16_t file)const;
+
 
 	void AddListener(Listener* listener) { _listeners.insert(listener); }
 	void RemListener(Listener* listener) { _listeners.erase(listener); }

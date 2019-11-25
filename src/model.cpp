@@ -263,7 +263,7 @@ void FileListModel::GetValueByRow(wxVariant &variant, unsigned int row, unsigned
 	switch (col)
 	{
 	case FileListModel::SHOWN:
-		variant = true;// GetData().IsLoggerShown(row);
+		variant = GetData().IsFileShown(row);
 		return;
 	case FileListModel::FILENAME:
 		variant = GetData().GetLogData().GetFile(row).path;
@@ -304,13 +304,11 @@ bool FileListModel::GetAttrByRow(unsigned int row, unsigned int col, wxDataViewI
 
 bool FileListModel::SetValueByRow(const wxVariant &variant, unsigned int row, unsigned int col)
 {
-#if 0
-	if (col == LoggerListModel::SHOWN)
+	if (col == FileListModel::SHOWN)
 	{
-		GetData().DisplayLogger(row, variant.GetBool());
+		GetData().DisplayFile(row, variant.GetBool());
 		return true;
 	}
-#endif
 	return false;
 }
 

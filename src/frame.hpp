@@ -194,6 +194,8 @@ private:
 	void OnSearchPrev(wxCommandEvent& event);
 
 	void OnFilesExtButtonActivated(wxRibbonPanelEvent& event);
+	void OnFilesItemActivated(wxDataViewEvent& event);
+
 };
 
 #endif // _FRAME_HPP_

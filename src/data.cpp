@@ -467,6 +467,16 @@ const FileDescriptor& LogData::GetFile(uint16_t id)const
 	return _fileDescriptors[id];
 }
 
+const FileDescriptor* LogData::FindFile(const wxString& file)const
+{
+	for(const FileDescriptor& fd : _fileDescriptors) {
+		if(fd.path == file) {
+			return &fd;
+		}
+	}
+	return nullptr;
+}
+
 //
 // FilteredLogData
 //
@@ -516,6 +526,12 @@ void FilteredLogData::Update()
 		_shownLoggers.resize(GetLogData().GetLoggerCount(), true);
 	}
 
+	if(_shownFiles.size() != GetLogData().GetFileCount()) {
+		// If file count doesnt match, reactivate alls.
+		_shownFiles.clear();
+		_shownFiles.resize(GetLogData().GetFileCount(), true);
+	}
+
 	_data.clear();
 	_data.reserve(_src.EntryCount());
 
@@ -526,6 +542,7 @@ void FilteredLogData::Update()
 			&& (!_start.IsValid() || entry.date >= _start)
 			&& (!_end.IsValid() || entry.date <= _end)
 			&& (_shownLoggers.at(entry.logger)!=false)
+			&& (_shownFiles.at(entry.file)!=false)
 			)
 		{
 			_data.push_back(n);
@@ -652,6 +669,61 @@ bool FilteredLogData::IsLoggerShown(long logger)const
 
 
 
+
+void FilteredLogData::DisplayAllFiles()
+{
+	// TODO optimize it
+	_shownFiles.clear();
+	_shownFiles.resize(GetLogData().GetFileCount(), true);
+	Update();
+}
+
+void FilteredLogData::HideAllFiles()
+{
+	// TODO optimize it
+	_shownFiles.clear();
+	_shownFiles.resize(GetLogData().GetFileCount(), false);
+	Update();
+}
+
+void FilteredLogData::DisplayFile(const wxString& file, bool display)
+{
+	const FileDescriptor* fd = GetLogData().FindFile(file);
+	if(fd!=nullptr)
+		DisplayFile(fd->id, display);
+}
+
+void FilteredLogData::DisplayFile(uint16_t file, bool display)
+{
+	if (file < GetLogData().GetFileCount()
+		&& _shownFiles.size() > file) // TODO Review it (shall be implied)
+	{
+		_shownFiles[file] = display;
+		Update();
+	}
+
+}
+
+void FilteredLogData::ToggleFile(uint16_t file)
+{
+	if (file < GetLogData().GetFileCount()
+		&& _shownFiles.size() > file) // TODO Review it (shall be implied)
+	{
+		_shownFiles[file] = !_shownFiles[file];
+		Update();
+	}
+}
+
+bool FilteredLogData::IsFileShown(const wxString& file)const
+{
+	const FileDescriptor* fd = GetLogData().FindFile(file);
+	return fd!=nullptr ?  IsFileShown(fd->id) : false;
+}
+
+bool FilteredLogData::IsFileShown(uint16_t file)const
+{
+	return _shownFiles[file];
+}
 
 
 //
