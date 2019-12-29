@@ -195,6 +195,7 @@ void Frame::init()
 				wxRibbonPanel* panel = new wxRibbonPanel(page, ID_LV_FILES_PANEL, "Files", wxNullBitmap, wxDefaultPosition, wxDefaultSize, wxRIBBON_PANEL_EXT_BUTTON);
 				wxRibbonButtonBar* bar = new wxRibbonButtonBar(panel, wxID_ANY);
 				bar->AddButton(wxID_OPEN, "Open", wxRibbonBmp("document-open"));
+				bar->AddButton(ID_LV_FILE_MANAGE, "Manage", wxRibbonBmp("document-manage"));
 				bar->AddButton(wxID_CLEAR, "Clear", wxRibbonBmp("document-clear"));
 			}
 			{

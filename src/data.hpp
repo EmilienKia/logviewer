@@ -20,7 +20,7 @@
 #ifndef _DATA_HPP_
 #define _DATA_HPP_
 
-
+#include <algorithm>
 #include <array>
 #include <vector>
 #include <set>
@@ -82,41 +82,95 @@ struct Entry
 
 struct FileDescriptor
 {
+	FileDescriptor():id(0), path() {}
+
 	FileDescriptor(uint16_t id, wxString path):id(id), path(path) {}
-	FileDescriptor(const FileDescriptor& fd):id(fd.id), path(fd.path), entryCount(fd.entryCount), criticalityCounts(fd.criticalityCounts) {}
+	FileDescriptor(const FileDescriptor& fd) = default; //:id(fd.id), path(fd.path), entryCount(fd.entryCount), criticalityCounts(fd.criticalityCounts) {}
+	FileDescriptor(FileDescriptor&& fd) = default;
+
+	FileDescriptor& operator=(const FileDescriptor&) = default;
+	FileDescriptor& operator=(FileDescriptor&&) = default;
 
 	uint16_t id;
 	wxString path;
+
+	enum FILE_DESC_STATUS
+	{
+		FILE_LOADED,	// The file have already been loaded
+		FILE_NEW,		// The file is new, never loaded
+		FILE_RELOAD,	// The file is to reload, have already been loaded.
+		FILE_REMOVED	// The file will be removed
+	} status = FILE_NEW;
+
 	size_t entryCount;
 	std::array<size_t, LOG_CRITICALITY_COUNT> criticalityCounts;
+
+
+	static wxString StatusToString(FILE_DESC_STATUS status);
 };
 
 
-class Parser
+class FileData
 {
+public:
+	struct Listener
+	{
+		virtual void Updated(FileData& data) = 0;
+	};
+
+
+	typedef std::vector<FileDescriptor> FileVector;
+	typedef std::vector<FileDescriptor>::iterator iterator;
+	typedef std::vector<FileDescriptor>::const_iterator const_iterator;
+
 protected:
-	LogData & _data;
+	std::vector<FileDescriptor> _fileDescriptors;
 
-	wxString _tempExtra;
-
-	FileDescriptor* _fileDesc;
-
-	void ParseLogLine(const wxString& line);
-
-	void AddLogLine(wxString date, wxString logger, wxString message);
-	void AddLogLine(wxString date, wxString criticality, wxString thread, wxString logger, wxString source, wxString message);
-
-	void AppendExtraLine();
+private:
+	std::set<Listener*> _fileListeners;
 
 public:
-	Parser(LogData& data) :_data(data) {}
+	FileData() = default;
 
-	void ParseLogFiles(const wxArrayString& paths);
-	void ParseLogFile(const wxString& path);
 
-	static wxArrayString SplitLine(const wxString& line);
-	static wxDateTime ParseDate(const wxString& str);
-	static CRITICALITY_LEVEL ParseCriticality(const wxString& str);
+	uint16_t AddFile(const wxString path);
+
+	size_t GetFileCount()const {return _fileDescriptors.size();}
+	FileDescriptor& GetFile(const wxString& file);
+	FileDescriptor& GetFile(uint16_t id);
+	const FileDescriptor& GetFile(uint16_t id)const;
+	const FileDescriptor* FindFile(const wxString& file)const;
+	const FileDescriptor* FindFile(uint16_t id)const;
+
+	long GetFileEntryCount(uint16_t fileid) const {return GetFile(fileid).entryCount; }
+	long GetFileCriticalityEntryCount(uint16_t fileid, CRITICALITY_LEVEL criticality) const {return GetFile(fileid).criticalityCounts[criticality]; }
+
+	iterator begin() {return _fileDescriptors.begin();}
+	const_iterator begin()const {return _fileDescriptors.begin();}
+	iterator end() {return _fileDescriptors.end();}
+	const_iterator end()const {return _fileDescriptors.end();}
+	
+	template<typename Pred>
+	void RemoveFileIf(Pred pred) {
+		_fileDescriptors.erase(std::remove_if(_fileDescriptors.begin(), _fileDescriptors.end(), pred), _fileDescriptors.end());
+	}
+
+	// @name Stats
+	// @{
+	void ClearStatistics();
+	// @}
+
+	// @name Listener management
+	// @{
+	void AddListener(Listener* listener) { _fileListeners.insert(listener); }
+	void RemListener(Listener* listener) { _fileListeners.erase(listener); }
+	// 
+
+protected:
+	void notifyUpdated() {
+		for(Listener* listener : _fileListeners)
+			listener->Updated(*this);
+	}
 };
 
 
@@ -137,8 +191,12 @@ public:
 		virtual void Updated(LogData& data) = 0;
 	};
 
+	typedef std::vector<Entry> FileVector;
+	typedef std::vector<Entry>::iterator iterator;
+	typedef std::vector<Entry>::const_iterator const_iterator;
+
 protected:
-	std::vector<FileDescriptor> _fileDescriptors;
+	FileData& _fileData;
 
 	wxStringCache _threads, _loggers, _sources;
 
@@ -153,10 +211,19 @@ protected:
 	void NotifyUpdate();
 
 public:
-	LogData();
+	LogData(FileData& fileData);
+
+	FileData& GetFileData() {return _fileData; }
+	const FileData& GetFileData() const {return _fileData; }
+
 	void Clear();
 	void AddLog(const wxDateTime& date, uint16_t file, CRITICALITY_LEVEL criticality, wxString thread, wxString logger, wxString source, wxString message);
 	void AddLog(const wxDateTime& date, uint16_t file, CRITICALITY_LEVEL criticality, long thread, long logger, long source, const wxString& message);
+
+	template<typename Pred>
+	void RemoveLogIf(Pred pred) {
+		_entries.erase(std::remove_if(_entries.begin(), _entries.end(), pred), _entries.end());
+	}
 
 	void Synchronize();
 
@@ -171,6 +238,12 @@ public:
 
 	Entry& GetLastEntry() { return _entries.back(); }
 	const Entry& GetLastEntry() const { return _entries.back(); }
+
+	iterator begin() {return _entries.begin();}
+	const_iterator begin()const {return _entries.begin();}
+	iterator end() {return _entries.end();}
+	const_iterator end()const {return _entries.end();}
+
 
 	size_t GetCriticalityCount(CRITICALITY_LEVEL level)const { return _criticalityCounts[level]; }
 	wxDateTime GetBeginDate()const;
@@ -195,17 +268,12 @@ public:
 	long GetLoggerEntryCount(long logger) const {return _loggersEntryCount[logger]; }
 	long GetLoggerCriticalityEntryCount(long logger, CRITICALITY_LEVEL criticality) const {return _criticalityLoggerCounts[logger][criticality]; }
 
-	size_t GetFileCount()const {return _fileDescriptors.size();}
-	FileDescriptor& GetFile(const wxString& file);
-	FileDescriptor& GetFile(uint16_t id);
-	const FileDescriptor& GetFile(uint16_t id)const;
-	const FileDescriptor* FindFile(const wxString& file)const;
 
-	long GetFileEntryCount(uint16_t fileid) const {return GetFile(fileid).entryCount; }
-	long GetFileCriticalityEntryCount(uint16_t fileid, CRITICALITY_LEVEL criticality) const {return GetFile(fileid).criticalityCounts[criticality]; }
-
+	// @name Listener management
+	// @{
 	void AddListener(Listener* listener) { _listeners.insert(listener); }
 	void RemListener(Listener* listener) { _listeners.erase(listener); }
+	// 
 };
 
 
@@ -245,6 +313,8 @@ public:
 	const LogData & GetLogData() const { return _src; }
 	LogData & GetLogData() { return _src; }
 
+	FileData& GetFileData() {return _src.GetFileData(); }
+	const FileData& GetFileData() const {return _src.GetFileData(); }
 
 	size_t EntryCount()const { return _data.size(); }
 

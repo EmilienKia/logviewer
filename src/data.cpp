@@ -33,258 +33,6 @@
 
 
 //
-// Log parser
-//
-
-void Parser::ParseLogFiles(const wxArrayString& paths)
-{
-	for (auto path : paths)
-	{
-		ParseLogFile(path);
-	}
-
-	_data.Synchronize();
-}
-
-void Parser::ParseLogFile(const wxString& path)
-{
-	wxFFileInputStream file(path);
-	if (!file.IsOk())
-	{
-		wxLogError("Cannot open file %s", path);
-		return;
-	}
-
-	_fileDesc = &_data.GetFile(path);
-	_tempExtra.Empty();
-
-	wxTextInputStream text(file);
-	while (!file.Eof())
-	{
-		ParseLogLine(text.ReadLine());
-	}
-	AppendExtraLine();
-
-	_fileDesc = nullptr;
-}
-
-
-void Parser::ParseLogLine(const wxString& line)
-{
-	if (!line.IsEmpty())
-	{
-		wxArrayString arr = SplitLine(line);
-		if (!arr.IsEmpty())
-		{
-			if (arr[0].Length() < 28)
-				// 28 : arbitrary value greater than any supported text date length
-			{
-				if (arr.GetCount() == 3)
-				{
-					AddLogLine(arr[0], arr[1], arr[2]);
-					return;
-				}
-				else if (arr.GetCount() == 6)
-				{
-					AddLogLine(arr[0], arr[1], arr[2], arr[3], arr[4], arr[5]);
-					return;
-				}
-			}
-			// Consider as extra line
-			_tempExtra.Append(line).Append("\n");
-		}
-	}
-}
-
-wxArrayString Parser::SplitLine(const wxString& line)
-{
-	wxArrayString arr;
-	size_t cur = 0;
-	size_t pos = 0;
-	while (pos = line.find(" | ", cur), pos != wxString::npos)
-	{
-		arr.Add(line.SubString(cur, pos - 1));
-		cur = pos + 3;
-		if (cur >= line.Length()) {
-			break;
-		}
-	}
-	if (cur<line.Length()) {
-		arr.Add(line.Mid(cur));
-	}
-	return arr;
-}
-
-void Parser::AppendExtraLine()
-{
-	if (!_tempExtra.IsEmpty())
-	{
-		if (_data.EntryCount()>0)
-		{
-			_data.GetLastEntry().extra = _tempExtra;
-		}
-		_tempExtra.clear();
-	}
-}
-
-void Parser::AddLogLine(wxString date, wxString criticality, wxString thread, wxString logger, wxString source, wxString message)
-{
-	AppendExtraLine();
-	_data.AddLog(
-		ParseDate(date.Trim(false).Trim(true)),
-		_fileDesc->id,
-		ParseCriticality(criticality.Trim(false)),
-		thread,
-		logger,
-		source,
-		message
-	);
-}
-
-void Parser::AddLogLine(wxString date, wxString logger, wxString message)
-{
-	AppendExtraLine();
-	_data.AddLog(
-		ParseDate(date.Trim(false).Trim(true)),
-		_fileDesc->id,
-		CRITICALITY_LEVEL::LOG_INFO,
-		"",
-		logger.Trim(false).Trim(true),
-		"",
-		message.Trim(false).Trim(true)
-	);
-}
-
-
-wxDateTime Parser::ParseDate(const wxString& str)
-{
-	long y = 0, mo = 0, d = 0, h = 0, m = 0, s = 0, ms = 0;
-	size_t start, len;
-
-	wxRegEx reDate;;
-	if (!reDate.Compile("^(\\d{4})[\\-\\/ ]?(\\d{2})[\\-\\/ ]?(\\d{2})[T\\- ](\\d{2})[\\: ]?(\\d{2})[\\: ]?(\\d{2})([,.](\\d{3}))?$", wxRE_ADVANCED))
-	{
-		std::cerr << "RegEx compilation error" << std::endl;
-		goto error;
-	}
-	if (reDate.Matches(str))
-	{
-		// Grp 1 : year
-		if (reDate.GetMatch(&start, &len, 1))
-		{
-			if (!str.substr(start, len).ToLong(&y)) goto error;
-		}
-		else
-		{
-			std::cerr << "Regex not match year" << std::endl;
-			goto error;
-		}
-
-		// Grp 2 : month
-		if (reDate.GetMatch(&start, &len, 2))
-		{
-			if (!str.substr(start, len).ToLong(&mo)) goto error;
-		}
-		else
-		{
-			std::cerr << "Regex not match month" << std::endl;
-			goto error;
-		}
-
-		// Grp 3 : day
-		if (reDate.GetMatch(&start, &len, 3))
-		{
-			if (!str.substr(start, len).ToLong(&d)) goto error;
-		}
-		else
-		{
-			std::cerr << "Regex not match day" << std::endl;
-			goto error;
-		}
-
-
-		// Grp 4 : hours
-		if (reDate.GetMatch(&start, &len, 4))
-		{
-			if (!str.substr(start, len).ToLong(&h)) goto error;
-		}
-		else
-		{
-			std::cerr << "Regex not match hours" << std::endl;
-			goto error;
-		}
-
-
-		// Grp 5 : minutes
-		if (reDate.GetMatch(&start, &len, 5))
-		{
-			if (!str.substr(start, len).ToLong(&m)) goto error;
-		}
-		else
-		{
-			std::cerr << "Regex not match minutes" << std::endl;
-			goto error;
-		}
-
-
-		// Grp 6 : seconds
-		if (reDate.GetMatch(&start, &len, 6))
-		{
-			if (!str.substr(start, len).ToLong(&s)) goto error;
-		}
-		else
-		{
-			std::cerr << "Regex not match seconds" << std::endl;
-			goto error;
-		}
-
-
-		// Grp 8 : milliseconds
-		if (reDate.GetMatch(&start, &len, 8))
-		{
-			if (!str.substr(start, len).ToLong(&ms)) goto error;
-		}
-		else ms = 0;
-
-		return wxDateTime(d, (wxDateTime::Month)(mo - 1), y, h, m, s, ms);
-	}
-	else
-	{
-		std::cerr << "Regex not match" << std::endl;
-	}
-
-error:
-	return wxDateTime();
-}
-
-CRITICALITY_LEVEL Parser::ParseCriticality(const wxString& str)
-{
-	if (str.IsEmpty())
-	{
-		return CRITICALITY_LEVEL::LOG_UNKNWON;
-	}
-	switch ((char)str[0])
-	{
-	case 'I':
-		return CRITICALITY_LEVEL::LOG_INFO;
-	case 'D':
-		return CRITICALITY_LEVEL::LOG_DEBUG;
-	case 'T':
-		return CRITICALITY_LEVEL::LOG_TRACE;
-	case 'E':
-		return CRITICALITY_LEVEL::LOG_ERROR;
-	case 'W':
-		return CRITICALITY_LEVEL::LOG_WARNING;
-	case 'C':
-		return CRITICALITY_LEVEL::LOG_CRITICAL;
-	case 'F':
-		return CRITICALITY_LEVEL::LOG_FATAL;
-	default:
-		return CRITICALITY_LEVEL::LOG_UNKNWON;
-	}
-}
-
-//
 // Formatter
 //
 
@@ -303,10 +51,77 @@ wxString Formatter::FormatDate(const wxDateTime& date)
 }
 
 //
+// File Descriptor
+//
+
+wxString FileDescriptor::StatusToString(FILE_DESC_STATUS status)
+{
+	static const wxString arr[] = {"", "New", "Reload", "Removed"};
+	return arr[status];
+}
+
+
+//
+// FileData
+//
+
+
+FileDescriptor& FileData::GetFile(const wxString& file)
+{
+	for(auto& fd : _fileDescriptors) {
+		if(fd.path == file) {
+			return fd;
+		}
+	}
+	_fileDescriptors.emplace_back(_fileDescriptors.size(), file);
+	return _fileDescriptors.back();
+}
+
+FileDescriptor& FileData::GetFile(uint16_t id)
+{
+	return _fileDescriptors[id];
+}
+
+const FileDescriptor& FileData::GetFile(uint16_t id)const 
+{
+	return _fileDescriptors[id];
+}
+
+const FileDescriptor* FileData::FindFile(const wxString& file)const
+{
+	for(const FileDescriptor& fd : _fileDescriptors) {
+		if(fd.path == file) {
+			return &fd;
+		}
+	}
+	return nullptr;
+}
+
+const FileDescriptor* FileData::FindFile(uint16_t id)const
+{
+	for(const FileDescriptor& fd : _fileDescriptors) {
+		if(fd.id == id) {
+			return &fd;
+		}
+	}
+	return nullptr;
+}
+
+void FileData::ClearStatistics()
+{
+	for(FileDescriptor& desc : _fileDescriptors)
+	{
+		desc.entryCount = 0;
+		desc.criticalityCounts = { 0, 0, 0, 0, 0, 0, 0, 0 };
+	}
+}
+
+//
 // Log database
 //
 
-LogData::LogData()
+LogData::LogData(FileData& fileData):
+_fileData(fileData)
 {
 }
 
@@ -407,19 +222,17 @@ void LogData::UpdateStatistics()
 	_criticalityLoggerCounts.clear();
 	_criticalityLoggerCounts.resize(_loggers.size(), { 0, 0, 0, 0, 0, 0, 0, 0 });
 
-	for(FileDescriptor& desc : _fileDescriptors)
-	{
-		desc.entryCount = 0;
-		desc.criticalityCounts = { 0, 0, 0, 0, 0, 0, 0, 0 };
-	}
+	GetFileData().ClearStatistics();
 
 	for (auto& entry : _entries)
 	{
 		_loggersEntryCount[entry.logger]++;
 		_criticalityCounts[entry.criticality]++;
 		_criticalityLoggerCounts[entry.logger][entry.criticality]++;
-		_fileDescriptors[entry.file].entryCount++;
-		_fileDescriptors[entry.file].criticalityCounts[entry.criticality]++;
+
+		FileDescriptor& fd = GetFileData().GetFile(entry.file);
+		fd.entryCount++;
+		fd.criticalityCounts[entry.criticality]++;
 
 		/* TODO, count filtered criticalities by loggers, threads and sources */
 	}
@@ -443,38 +256,6 @@ wxDateTime LogData::GetBeginDate()const
 wxDateTime LogData::GetEndDate()const
 {
 	return EntryCount()>0 ? GetEntry(EntryCount() - 1).date : wxDateTime();
-}
-
-
-FileDescriptor& LogData::GetFile(const wxString& file)
-{
-	for(auto& fd : _fileDescriptors) {
-		if(fd.path == file) {
-			return fd;
-		}
-	}
-	_fileDescriptors.emplace_back(_fileDescriptors.size(), file);
-	return _fileDescriptors.back();
-}
-
-FileDescriptor& LogData::GetFile(uint16_t id)
-{
-	return _fileDescriptors[id];
-}
-
-const FileDescriptor& LogData::GetFile(uint16_t id)const 
-{
-	return _fileDescriptors[id];
-}
-
-const FileDescriptor* LogData::FindFile(const wxString& file)const
-{
-	for(const FileDescriptor& fd : _fileDescriptors) {
-		if(fd.path == file) {
-			return &fd;
-		}
-	}
-	return nullptr;
 }
 
 //
@@ -526,10 +307,10 @@ void FilteredLogData::Update()
 		_shownLoggers.resize(GetLogData().GetLoggerCount(), true);
 	}
 
-	if(_shownFiles.size() != GetLogData().GetFileCount()) {
+	if(_shownFiles.size() != GetFileData().GetFileCount()) {
 		// If file count doesnt match, reactivate alls.
 		_shownFiles.clear();
-		_shownFiles.resize(GetLogData().GetFileCount(), true);
+		_shownFiles.resize(GetFileData().GetFileCount(), true);
 	}
 
 	_data.clear();
@@ -674,7 +455,7 @@ void FilteredLogData::DisplayAllFiles()
 {
 	// TODO optimize it
 	_shownFiles.clear();
-	_shownFiles.resize(GetLogData().GetFileCount(), true);
+	_shownFiles.resize(GetFileData().GetFileCount(), true);
 	Update();
 }
 
@@ -682,20 +463,20 @@ void FilteredLogData::HideAllFiles()
 {
 	// TODO optimize it
 	_shownFiles.clear();
-	_shownFiles.resize(GetLogData().GetFileCount(), false);
+	_shownFiles.resize(GetFileData().GetFileCount(), false);
 	Update();
 }
 
 void FilteredLogData::DisplayFile(const wxString& file, bool display)
 {
-	const FileDescriptor* fd = GetLogData().FindFile(file);
+	const FileDescriptor* fd = GetFileData().FindFile(file);
 	if(fd!=nullptr)
 		DisplayFile(fd->id, display);
 }
 
 void FilteredLogData::DisplayFile(uint16_t file, bool display)
 {
-	if (file < GetLogData().GetFileCount()
+	if (file < GetFileData().GetFileCount()
 		&& _shownFiles.size() > file) // TODO Review it (shall be implied)
 	{
 		_shownFiles[file] = display;
@@ -706,7 +487,7 @@ void FilteredLogData::DisplayFile(uint16_t file, bool display)
 
 void FilteredLogData::ToggleFile(uint16_t file)
 {
-	if (file < GetLogData().GetFileCount()
+	if (file < GetFileData().GetFileCount()
 		&& _shownFiles.size() > file) // TODO Review it (shall be implied)
 	{
 		_shownFiles[file] = !_shownFiles[file];
@@ -716,7 +497,7 @@ void FilteredLogData::ToggleFile(uint16_t file)
 
 bool FilteredLogData::IsFileShown(const wxString& file)const
 {
-	const FileDescriptor* fd = GetLogData().FindFile(file);
+	const FileDescriptor* fd = GetFileData().FindFile(file);
 	return fd!=nullptr ?  IsFileShown(fd->id) : false;
 }
 

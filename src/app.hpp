@@ -25,6 +25,51 @@
 #include "model.hpp"
 
 
+
+enum {
+
+	ID_LOGVIEWER_CUSTOM = wxID_HIGHEST + 1,
+
+	ID_LV_FILE_MANAGE,
+
+	ID_LV_LOGS,
+
+	ID_LV_BEGIN_DATE,
+	ID_LV_END_DATE,
+
+	ID_LV_SHOW_EXTRA,
+	ID_LV_EXTRA_TEXT,
+	ID_LV_SET_BEGIN_DATE,
+	ID_LV_SET_END_DATE,
+
+	ID_LV_LOGGER_PANEL,
+	ID_LV_LOGGER_LISTBOX,
+	ID_LV_SHOW_ALL_LOGGERS,
+	ID_LV_SHOW_NO_LOGGERS,
+	ID_LV_SHOW_ONLY_CURRENT_LOGGER,
+	ID_LV_SHOW_ALL_BUT_CURRENT_LOGGER,
+	ID_LV_FOCUS_PREVIOUS_CURRENT_LOGGER,
+	ID_LV_FOCUS_NEXT_CURRENT_LOGGER,
+
+	ID_LV_SEARCH_PANEL,
+	ID_LV_SEARCH_CTRL,
+	ID_LV_SEARCH_CTRL_FOCUS,
+	ID_LV_SEARCH_DIRECTION_ASC,
+	ID_LV_SEARCH_DIRECTION_DESC,
+	ID_LV_SEARCH_CYCLE,
+	ID_LV_SEARCH_CASE_SENSITIVE,
+	ID_LV_SEARCH_ESCAPE,
+	ID_LV_SEARCH_REGEX,
+	ID_LV_SEARCH_NEXT,
+	ID_LV_SEARCH_PREV,
+
+	ID_LV_FILES_PANEL,
+	ID_LV_FILES_LISTBOX,
+
+	ID_LV_FILEBOX_FILE_DVCTRL
+};
+
+
 class Frame;
 
 class LogViewerApp : public wxApp
@@ -33,11 +78,15 @@ class LogViewerApp : public wxApp
 protected:
 	Frame * _frame;
 
+	FileData		_files;
 	LogData			_data;
 	FilteredLogData _filteredData;
 
 public:
 	LogViewerApp();
+
+	const FileData& GetFileData() const { return _files; }
+	FileData& GetFileData() { return _files; }
 
 	const LogData& GetLogData() const { return _data; }
 	LogData& GetLogData() { return _data; }
@@ -47,11 +96,20 @@ public:
 
 	void OpenFiles(const wxArrayString& files);
 
+	int OpenFileDialog(wxWindow* parent, wxArrayString& paths);
+
+	void FileManagement();
+
 protected:
 	virtual bool OnInit();
 
+	void ApplyUpdates();
+
+	void CancelUpdates();
+
 private:
 	void OnOpen(wxCommandEvent& event);
+	void OnManage(wxCommandEvent& event);
 	void OnClear(wxCommandEvent& event);
 	void OnExit(wxCommandEvent& event);
 };
