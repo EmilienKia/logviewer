@@ -172,6 +172,8 @@ bool FileOpenDialog::Create(wxWindow *parent, wxWindowID id, const wxString &tit
 	SetSizer(gsz);
 
 	_filesModel->Update();
+
+    return true;
 }
 
 
