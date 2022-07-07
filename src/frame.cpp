@@ -200,7 +200,7 @@ void Frame::init()
 			}
 			{
 				wxRibbonPanel *panel = new wxRibbonPanel(page, wxID_ANY, "Criticality");
-				_criticalitySlider = new wxSlider(panel, wxID_ANY, LOG_INFO, LOG_UNKNWON, LOG_FATAL, wxDefaultPosition, wxDefaultSize, wxTRANSPARENT_WINDOW|wxSL_HORIZONTAL| wxSL_AUTOTICKS);
+				_criticalitySlider = new wxSlider(panel, wxID_ANY, LOG_INFO, LOG_UNKNOWN, LOG_FATAL, wxDefaultPosition, wxDefaultSize, wxTRANSPARENT_WINDOW|wxSL_HORIZONTAL| wxSL_AUTOTICKS);
 				_criticalitySlider->SetMinSize(wxSize(128, -1));
 				_criticalityText = new wxStaticText(panel, wxID_ANY, "INFO", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL|wxTRANSPARENT_WINDOW);
 				wxSizer* szr = new wxBoxSizer(wxVERTICAL);

@@ -276,7 +276,7 @@ CRITICALITY_LEVEL Parser::ParseCriticality(const wxString& str)
 {
 	if (str.IsEmpty())
 	{
-		return CRITICALITY_LEVEL::LOG_UNKNWON;
+		return CRITICALITY_LEVEL::LOG_UNKNOWN;
 	}
 	switch ((char)str[0])
 	{
@@ -295,6 +295,6 @@ CRITICALITY_LEVEL Parser::ParseCriticality(const wxString& str)
 	case 'F':
 		return CRITICALITY_LEVEL::LOG_FATAL;
 	default:
-		return CRITICALITY_LEVEL::LOG_UNKNWON;
+		return CRITICALITY_LEVEL::LOG_UNKNOWN;
 	}
 }
