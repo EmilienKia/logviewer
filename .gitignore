@@ -44,6 +44,7 @@ m4/lt~obsolete.m4
 # Various project files
 .anjuta_sym_db.db
 .anjuta/
+.idea/
 nbproject/
 .vscode/
 GPATH
