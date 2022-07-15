@@ -59,8 +59,10 @@ bool LogViewerApp::OnInit()
 	wxArtProvider::Push(new wxFreedesktopArtProvider(ICONSETDIR));
 #endif // ICONSETDIR
 #ifdef __UNIX__
-//    wxArtProvider::Push(new wxFreedesktopArtProvider("/usr/share/icons/gnome"));
-//    wxArtProvider::Push(new wxFreedesktopArtProvider(wxStandardPaths::Get().GetDataDir()+"/icons/hicolor"));
+//#define ICONSETDIR "/usr/local/share/logviewer/icons"
+//#define ICONSETDIR "/usr/share/logviewer/icons"
+    wxArtProvider::Push(new wxFreedesktopArtProvider("/usr/share/icons/gnome"));
+    wxArtProvider::Push(new wxFreedesktopArtProvider(wxStandardPaths::Get().GetDataDir()+"/icons/hicolor"));
 #endif
 #if __WXMSW__
 	wxArtProvider::Push(new wxMicrosoftResourceArtProvider);
