@@ -1,7 +1,7 @@
 /* -*- Mode: C++; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-  */
 /*
  * app.hpp
- * Copyright (C) 2018-2019 Emilien Kia <Emilien.Kia+dev@gmail.com>
+ * Copyright (C) 2018-2025 Emilien Kia <Emilien.Kia+dev@gmail.com>
  *
  * logviewer is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -28,45 +28,45 @@
 
 enum {
 
-	ID_LOGVIEWER_CUSTOM = wxID_HIGHEST + 1,
+    ID_LOGVIEWER_CUSTOM = wxID_HIGHEST + 1,
 
-	ID_LV_FILE_MANAGE,
+    ID_LV_FILE_MANAGE,
 
-	ID_LV_LOGS,
+    ID_LV_LOGS,
 
-	ID_LV_BEGIN_DATE,
-	ID_LV_END_DATE,
+    ID_LV_BEGIN_DATE,
+    ID_LV_END_DATE,
 
-	ID_LV_SHOW_EXTRA,
-	ID_LV_EXTRA_TEXT,
-	ID_LV_SET_BEGIN_DATE,
-	ID_LV_SET_END_DATE,
+    ID_LV_SHOW_EXTRA,
+    ID_LV_EXTRA_TEXT,
+    ID_LV_SET_BEGIN_DATE,
+    ID_LV_SET_END_DATE,
 
-	ID_LV_LOGGER_PANEL,
-	ID_LV_LOGGER_LISTBOX,
-	ID_LV_SHOW_ALL_LOGGERS,
-	ID_LV_SHOW_NO_LOGGERS,
-	ID_LV_SHOW_ONLY_CURRENT_LOGGER,
-	ID_LV_SHOW_ALL_BUT_CURRENT_LOGGER,
-	ID_LV_FOCUS_PREVIOUS_CURRENT_LOGGER,
-	ID_LV_FOCUS_NEXT_CURRENT_LOGGER,
+    ID_LV_LOGGER_PANEL,
+    ID_LV_LOGGER_LISTBOX,
+    ID_LV_SHOW_ALL_LOGGERS,
+    ID_LV_SHOW_NO_LOGGERS,
+    ID_LV_SHOW_ONLY_CURRENT_LOGGER,
+    ID_LV_SHOW_ALL_BUT_CURRENT_LOGGER,
+    ID_LV_FOCUS_PREVIOUS_CURRENT_LOGGER,
+    ID_LV_FOCUS_NEXT_CURRENT_LOGGER,
 
-	ID_LV_SEARCH_PANEL,
-	ID_LV_SEARCH_CTRL,
-	ID_LV_SEARCH_CTRL_FOCUS,
-	ID_LV_SEARCH_DIRECTION_ASC,
-	ID_LV_SEARCH_DIRECTION_DESC,
-	ID_LV_SEARCH_CYCLE,
-	ID_LV_SEARCH_CASE_SENSITIVE,
-	ID_LV_SEARCH_ESCAPE,
-	ID_LV_SEARCH_REGEX,
-	ID_LV_SEARCH_NEXT,
-	ID_LV_SEARCH_PREV,
+    ID_LV_SEARCH_PANEL,
+    ID_LV_SEARCH_CTRL,
+    ID_LV_SEARCH_CTRL_FOCUS,
+    ID_LV_SEARCH_DIRECTION_ASC,
+    ID_LV_SEARCH_DIRECTION_DESC,
+    ID_LV_SEARCH_CYCLE,
+    ID_LV_SEARCH_CASE_SENSITIVE,
+    ID_LV_SEARCH_ESCAPE,
+    ID_LV_SEARCH_REGEX,
+    ID_LV_SEARCH_NEXT,
+    ID_LV_SEARCH_PREV,
 
-	ID_LV_FILES_PANEL,
-	ID_LV_FILES_LISTBOX,
+    ID_LV_FILES_PANEL,
+    ID_LV_FILES_LISTBOX,
 
-	ID_LV_FILEBOX_FILE_DVCTRL
+    ID_LV_FILEBOX_FILE_DVCTRL
 };
 
 
@@ -76,42 +76,42 @@ class LogViewerApp : public wxApp
 {
     DECLARE_EVENT_TABLE();
 protected:
-	Frame * _frame;
+    Frame * _frame;
 
-	FileData		_files;
-	LogData			_data;
-	FilteredLogData _filteredData;
+    FileData		_files;
+    LogData			_data;
+    FilteredLogData _filteredData;
 
 public:
-	LogViewerApp();
+    LogViewerApp();
 
-	const FileData& GetFileData() const { return _files; }
-	FileData& GetFileData() { return _files; }
+    const FileData& GetFileData() const { return _files; }
+    FileData& GetFileData() { return _files; }
 
-	const LogData& GetLogData() const { return _data; }
-	LogData& GetLogData() { return _data; }
+    const LogData& GetLogData() const { return _data; }
+    LogData& GetLogData() { return _data; }
 
-	const FilteredLogData& GetFilteredLogData() const { return _filteredData; }
-	FilteredLogData& GetFilteredLogData() { return _filteredData; }
+    const FilteredLogData& GetFilteredLogData() const { return _filteredData; }
+    FilteredLogData& GetFilteredLogData() { return _filteredData; }
 
-	void OpenFiles(const wxArrayString& files);
+    void OpenFiles(const wxArrayString& files);
 
-	int OpenFileDialog(wxWindow* parent, wxArrayString& paths);
+    int OpenFileDialog(wxWindow* parent, wxArrayString& paths);
 
-	void FileManagement();
+    void FileManagement();
 
 protected:
-	virtual bool OnInit();
+    virtual bool OnInit();
 
-	void ApplyUpdates();
+    void ApplyUpdates();
 
-	void CancelUpdates();
+    void CancelUpdates();
 
 private:
-	void OnOpen(wxCommandEvent& event);
-	void OnManage(wxCommandEvent& event);
-	void OnClear(wxCommandEvent& event);
-	void OnExit(wxCommandEvent& event);
+    void OnOpen(wxCommandEvent& event);
+    void OnManage(wxCommandEvent& event);
+    void OnClear(wxCommandEvent& event);
+    void OnExit(wxCommandEvent& event);
 };
 
 DECLARE_APP(LogViewerApp);

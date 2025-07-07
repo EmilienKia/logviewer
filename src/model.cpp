@@ -1,7 +1,7 @@
 /* -*- Mode: C++; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-  */
 /*
 * model.cpp
-* Copyright (C) 2019 Emilien Kia <Emilien.Kia+dev@gmail.com>
+* Copyright (C) 2019-2025 Emilien Kia <Emilien.Kia+dev@gmail.com>
 *
 * logviewer is free software: you can redistribute it and/or modify it
 * under the terms of the GNU General Public License as published by the
@@ -23,6 +23,7 @@
 #include <wx/wx.h>
 
 #include "model.hpp"
+#include "helpers.hpp"
 
 
 //
@@ -30,105 +31,106 @@
 //
 
 LogListModel::LogListModel(FilteredLogData& data) :
-	_data(data)
+    _data(data)
 {
-	data.AddListener(this);
+    data.AddListener(this);
 }
 
 size_t LogListModel::Count()const
 {
-	return GetData().EntryCount();
+    return GetData().EntryCount();
 }
 
-const Entry& LogListModel::Get(size_t id)const
+const LogEntry& LogListModel::Get(size_t id)const
 {
-	return GetData().GetEntry(id);
+    return GetData().GetEntry(id);
 }
 
-Entry& LogListModel::Get(size_t id)
+LogEntry& LogListModel::Get(size_t id)
 {
-	return GetData().GetEntry(id);
+    return GetData().GetEntry(id);
 }
 
-const Entry& LogListModel::Get(wxDataViewItem item)const
+const LogEntry& LogListModel::Get(wxDataViewItem item)const
 {
-	return Get(GetRow(item));
+    return Get(GetRow(item));
 }
 
-Entry& LogListModel::Get(wxDataViewItem item)
+LogEntry& LogListModel::Get(wxDataViewItem item)
 {
-	return Get(GetRow(item));
+    return Get(GetRow(item));
 }
 
 
 unsigned int LogListModel::GetPos(wxDataViewItem item)const
 {
-	return GetRow(item);
+    return GetRow(item);
 }
 
 unsigned int LogListModel::GetColumnCount()const
 {
-	return LogListModel::COLUMN_COUNT;
+    return LogListModel::COLUMN_COUNT;
 }
 
 wxString LogListModel::GetColumnType(unsigned int col)const
 {
-	if (col == LogListModel::EXTRA)
-		return "bool";
-	else
-		return "string";
+    if (col == LogListModel::EXTRA)
+        return "bool";
+    else
+        return "string";
 }
 
 void LogListModel::GetValueByRow(wxVariant &variant, unsigned int row, unsigned int col) const
 {
-	auto& entry = GetData().GetEntry(row);
-	switch (col)
-	{
-	case LogListModel::DATE:
-		variant = Formatter::FormatDate(entry.date);
-		return;
-	case LogListModel::CRITICALITY:
-		variant = Formatter::FormatCriticality(entry.criticality);
-		return;
-	case LogListModel::THREAD:
-		variant = GetData().GetLogData().GetThreadLabel(entry.thread);
-		return;
-	case LogListModel::LOGGER:
-		variant = GetData().GetLogData().GetLoggerLabel(entry.logger);
-		return;
-	case LogListModel::SOURCE:
-		variant = GetData().GetLogData().GetSourceLabel(entry.source);
-		return;
-	case LogListModel::MESSAGE:
-		variant = entry.message;
-		return;
-	case LogListModel::EXTRA:
-		variant = !entry.extra.IsEmpty();
-		return;
-	default:
-		return;
-	}
+    auto& entry = GetData().GetEntry(row);
+    switch (col)
+    {
+    case LogListModel::DATE:
+        variant = Formatter::FormatDate(entry.date);
+        return;
+    case LogListModel::CRITICALITY:
+        variant = Formatter::FormatCriticality(entry.level);
+        return;
+    case LogListModel::THREAD:
+        variant = GetData().GetLogData().GetThreadLabel(entry.thread);
+        return;
+    case LogListModel::LOGGER:
+        variant = GetData().GetLogData().GetLoggerLabel(entry.logger);
+        return;
+    case LogListModel::SOURCE:
+        variant = GetData().GetLogData().GetSourceLabel(entry.source);
+        return;
+    case LogListModel::MESSAGE:
+        // TODO Optimize this:
+        variant = wxString(std::string(entry.message));
+        return;
+    case LogListModel::EXTRA:
+        variant = !entry.extra.empty();
+        return;
+    default:
+        return;
+    }
 }
 
 bool LogListModel::GetAttrByRow(unsigned int row, unsigned int col, wxDataViewItemAttr &attr)const
 {
-	// TODO
-	return false;
+    // TODO
+    return false;
 }
 
 bool LogListModel::SetValueByRow(const wxVariant &variant, unsigned int row, unsigned int col)
 {
-	return false;
+    return false;
 }
 
 void LogListModel::Update()
 {
-	Reset(GetData().EntryCount());
+    Reset(GetData().EntryCount());
 }
 
 void LogListModel::Updated(FilteredLogData& data)
 {
-	Update();
+    Update();
 }
 
 //
@@ -136,101 +138,101 @@ void LogListModel::Updated(FilteredLogData& data)
 //
 
 LoggerListModel::LoggerListModel(FilteredLogData& data) :
-	_data(data)
+    _data(data)
 {
-	data.AddListener(this);
+    data.AddListener(this);
 }
 
 unsigned int LoggerListModel::GetColumnCount()const
 {
-	return LoggerListModel::COLUMN_COUNT;
+    return LoggerListModel::COLUMN_COUNT;
 }
 
 wxString LoggerListModel::GetColumnType(unsigned int col)const
 {
-	if (col == LoggerListModel::SHOWN)
-		return "bool";
-	else
-		return "string";
+    if (col == LoggerListModel::SHOWN)
+        return "bool";
+    else
+        return "string";
 }
 
 static wxString wxFormatCount(long num) {
-	wxString str;
-	if (num != 0) {
-		str << num;
-	}
-	return str;
+    wxString str;
+    if (num != 0) {
+        str << num;
+    }
+    return str;
 }
 
 void LoggerListModel::GetValueByRow(wxVariant &variant, unsigned int row, unsigned int col) const
 {
-	switch (col)
-	{
-	case LoggerListModel::SHOWN:
-		variant = GetData().IsLoggerShown(row);
-		return;
-	case LoggerListModel::LOGGER:
-		variant = GetData().GetLogData().GetLoggerLabel(row);
-		return;
-	case LoggerListModel::COUNT:
-		variant = wxFormatCount(GetData().GetLogData().GetLoggerEntryCount(row));
-		return;
-	case LoggerListModel::CRIT_FATAL:
-		variant = wxFormatCount(GetData().GetLogData().GetLoggerCriticalityEntryCount(row, LOG_FATAL));
-		return;
-	case LoggerListModel::CRIT_CRITICAL:
-		variant = wxFormatCount(GetData().GetLogData().GetLoggerCriticalityEntryCount(row, LOG_CRITICAL));
-		return;
-	case LoggerListModel::CRIT_ERROR:
-		variant = wxFormatCount(GetData().GetLogData().GetLoggerCriticalityEntryCount(row, LOG_ERROR));
-		return;
-	case LoggerListModel::CRIT_WARNING:
-		variant = wxFormatCount(GetData().GetLogData().GetLoggerCriticalityEntryCount(row, LOG_WARNING));
-		return;
-	case LoggerListModel::CRIT_INFO:
-		variant = wxFormatCount(GetData().GetLogData().GetLoggerCriticalityEntryCount(row, LOG_INFO));
-		return;
-	case LoggerListModel::CRIT_DEBUG:
-		variant = wxFormatCount(GetData().GetLogData().GetLoggerCriticalityEntryCount(row, LOG_DEBUG));
-		return;
-	case LoggerListModel::CRIT_TRACE:
-		variant = wxFormatCount(GetData().GetLogData().GetLoggerCriticalityEntryCount(row, LOG_TRACE));
-		return;
-	default:
-		return;
-	}
+    switch (col)
+    {
+    case LoggerListModel::SHOWN:
+        variant = GetData().IsLoggerShown(row);
+        return;
+    case LoggerListModel::LOGGER:
+        variant = GetData().GetLogData().GetLoggerLabel(row);
+        return;
+    case LoggerListModel::COUNT:
+        variant = wxFormatCount(GetData().GetLogData().GetLoggerEntryCount(row));
+        return;
+    case LoggerListModel::CRIT_FATAL:
+        variant = wxFormatCount(GetData().GetLogData().GetLevelLoggerEntryCount(row, LOG_FATAL));
+        return;
+    case LoggerListModel::CRIT_CRITICAL:
+        variant = wxFormatCount(GetData().GetLogData().GetLevelLoggerEntryCount(row, LOG_CRITICAL));
+        return;
+    case LoggerListModel::CRIT_ERROR:
+        variant = wxFormatCount(GetData().GetLogData().GetLevelLoggerEntryCount(row, LOG_ERROR));
+        return;
+    case LoggerListModel::CRIT_WARNING:
+        variant = wxFormatCount(GetData().GetLogData().GetLevelLoggerEntryCount(row, LOG_WARNING));
+        return;
+    case LoggerListModel::CRIT_INFO:
+        variant = wxFormatCount(GetData().GetLogData().GetLevelLoggerEntryCount(row, LOG_INFO));
+        return;
+    case LoggerListModel::CRIT_DEBUG:
+        variant = wxFormatCount(GetData().GetLogData().GetLevelLoggerEntryCount(row, LOG_DEBUG));
+        return;
+    case LoggerListModel::CRIT_TRACE:
+        variant = wxFormatCount(GetData().GetLogData().GetLevelLoggerEntryCount(row, LOG_TRACE));
+        return;
+    default:
+        return;
+    }
 }
 
 bool LoggerListModel::GetAttrByRow(unsigned int row, unsigned int col, wxDataViewItemAttr &attr)const
 {
-	// TODO
-	return false;
+    // TODO
+    return false;
 }
 
 bool LoggerListModel::SetValueByRow(const wxVariant &variant, unsigned int row, unsigned int col)
 {
-	if (col == LoggerListModel::SHOWN)
-	{
-		GetData().DisplayLogger(row, variant.GetBool());
-		return true;
-	}
-	return false;
+    if (col == LoggerListModel::SHOWN)
+    {
+        GetData().DisplayLogger(row, variant.GetBool());
+        return true;
+    }
+    return false;
 }
 
 void LoggerListModel::Update()
 {
-	long count = GetData().GetLogData().GetLoggerCount();
-	Reset(count);
+    long count = GetData().GetLogData().GetLoggerCount();
+    Reset(count);
 }
 
 void LoggerListModel::Updated(FilteredLogData& data)
 {
-	Update();
+    Update();
 }
 
 long LoggerListModel::GetLoggerId(wxDataViewItem item)const
 {
-	return GetRow(item);
+    return GetRow(item);
 }
 
 
@@ -240,90 +242,90 @@ long LoggerListModel::GetLoggerId(wxDataViewItem item)const
 //
 
 FileListModel::FileListModel(FilteredLogData& data) :
-	_data(data)
+    _data(data)
 {
-	data.AddListener(this);
+    data.AddListener(this);
 }
 
 unsigned int FileListModel::GetColumnCount()const
 {
-	return FileListModel::COLUMN_COUNT;
+    return FileListModel::COLUMN_COUNT;
 }
 
 wxString FileListModel::GetColumnType(unsigned int col)const
 {
-	if (col == FileListModel::SHOWN)
-		return "bool";
-	else
-		return "string";
+    if (col == FileListModel::SHOWN)
+        return "bool";
+    else
+        return "string";
 }
 
 void FileListModel::GetValueByRow(wxVariant &variant, unsigned int row, unsigned int col) const
 {
-	switch (col)
-	{
-	case FileListModel::SHOWN:
-		variant = GetData().IsFileShown(row);
-		return;
-	case FileListModel::FILENAME:
-		variant = GetData().GetFileData().GetFile(row).path;
-		return;
-	case FileListModel::COUNT:
-		variant = wxFormatCount(GetData().GetFileData().GetFileEntryCount(row));
-		return;
-	case FileListModel::CRIT_FATAL:
-		variant = wxFormatCount(GetData().GetFileData().GetFileCriticalityEntryCount(row, LOG_FATAL));
-		return;
-	case FileListModel::CRIT_CRITICAL:
-		variant = wxFormatCount(GetData().GetFileData().GetFileCriticalityEntryCount(row, LOG_CRITICAL));
-		return;
-	case FileListModel::CRIT_ERROR:
-		variant = wxFormatCount(GetData().GetFileData().GetFileCriticalityEntryCount(row, LOG_ERROR));
-		return;
-	case FileListModel::CRIT_WARNING:
-		variant = wxFormatCount(GetData().GetFileData().GetFileCriticalityEntryCount(row, LOG_WARNING));
-		return;
-	case FileListModel::CRIT_INFO:
-		variant = wxFormatCount(GetData().GetFileData().GetFileCriticalityEntryCount(row, LOG_INFO));
-		return;
-	case FileListModel::CRIT_DEBUG:
-		variant = wxFormatCount(GetData().GetFileData().GetFileCriticalityEntryCount(row, LOG_DEBUG));
-		return;
-	case FileListModel::CRIT_TRACE:
-		variant = wxFormatCount(GetData().GetFileData().GetFileCriticalityEntryCount(row, LOG_TRACE));
-		return;
-	default:
-		return;
-	}
+    switch (col)
+    {
+    case FileListModel::SHOWN:
+        variant = GetData().IsFileShown(row);
+        return;
+    case FileListModel::FILENAME:
+        variant = GetData().GetFileData().GetFile(row).path;
+        return;
+    case FileListModel::COUNT:
+        variant = wxFormatCount(GetData().GetFileData().GetFileEntryCount(row));
+        return;
+    case FileListModel::CRIT_FATAL:
+        variant = wxFormatCount(GetData().GetFileData().GetFileLogLevelEntryCount(row, LOG_FATAL));
+        return;
+    case FileListModel::CRIT_CRITICAL:
+        variant = wxFormatCount(GetData().GetFileData().GetFileLogLevelEntryCount(row, LOG_CRITICAL));
+        return;
+    case FileListModel::CRIT_ERROR:
+        variant = wxFormatCount(GetData().GetFileData().GetFileLogLevelEntryCount(row, LOG_ERROR));
+        return;
+    case FileListModel::CRIT_WARNING:
+        variant = wxFormatCount(GetData().GetFileData().GetFileLogLevelEntryCount(row, LOG_WARNING));
+        return;
+    case FileListModel::CRIT_INFO:
+        variant = wxFormatCount(GetData().GetFileData().GetFileLogLevelEntryCount(row, LOG_INFO));
+        return;
+    case FileListModel::CRIT_DEBUG:
+        variant = wxFormatCount(GetData().GetFileData().GetFileLogLevelEntryCount(row, LOG_DEBUG));
+        return;
+    case FileListModel::CRIT_TRACE:
+        variant = wxFormatCount(GetData().GetFileData().GetFileLogLevelEntryCount(row, LOG_TRACE));
+        return;
+    default:
+        return;
+    }
 }
 
 bool FileListModel::GetAttrByRow(unsigned int row, unsigned int col, wxDataViewItemAttr &attr)const
 {
-	return false;
+    return false;
 }
 
 bool FileListModel::SetValueByRow(const wxVariant &variant, unsigned int row, unsigned int col)
 {
-	if (col == FileListModel::SHOWN)
-	{
-		GetData().DisplayFile(row, variant.GetBool());
-		return true;
-	}
-	return false;
+    if (col == FileListModel::SHOWN)
+    {
+        GetData().DisplayFile(row, variant.GetBool());
+        return true;
+    }
+    return false;
 }
 
 void FileListModel::Update()
 {
-	long count = GetData().GetFileData().GetFileCount();
-	Reset(count);
+    long count = GetData().GetFileData().GetFileCount();
+    Reset(count);
 }
 
 void FileListModel::Updated(FilteredLogData& data)
 {
-	Update();
+    Update();
 }
 
 uint16_t FileListModel::GetFileId(wxDataViewItem item)const
 {
-	return GetRow(item);
+    return GetRow(item);
 }

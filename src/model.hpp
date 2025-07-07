@@ -1,7 +1,7 @@
 /* -*- Mode: C++; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-  */
 /*
 * model.hpp
-* Copyright (C) 2019 Emilien Kia <Emilien.Kia+dev@gmail.com>
+* Copyright (C) 2019-2025 Emilien Kia <Emilien.Kia+dev@gmail.com>
 *
 * logviewer is free software: you can redistribute it and/or modify it
 * under the terms of the GNU General Public License as published by the
@@ -28,45 +28,45 @@
 class LogListModel : public wxDataViewVirtualListModel, protected FilteredLogData::Listener
 {
 public:
-	LogListModel(FilteredLogData& data);
+    LogListModel(FilteredLogData& data);
 
-	// DVVLM definitions:
-	virtual unsigned int GetColumnCount()const;
-	virtual wxString GetColumnType(unsigned int col)const;
+    // DVVLM definitions:
+    virtual unsigned int GetColumnCount()const;
+    virtual wxString GetColumnType(unsigned int col)const;
 
-	virtual void GetValueByRow(wxVariant &variant, unsigned int row, unsigned int col) const;
-	virtual bool SetValueByRow(const wxVariant &variant, unsigned int row, unsigned int col);
-	virtual bool GetAttrByRow(unsigned int row, unsigned int col, wxDataViewItemAttr &attr)const;
+    virtual void GetValueByRow(wxVariant &variant, unsigned int row, unsigned int col) const;
+    virtual bool SetValueByRow(const wxVariant &variant, unsigned int row, unsigned int col);
+    virtual bool GetAttrByRow(unsigned int row, unsigned int col, wxDataViewItemAttr &attr)const;
 
-	// Model definition
-	enum LogListModelColumns {
-		DATE,
-		CRITICALITY,
-		THREAD,
-		LOGGER,
-		SOURCE,
-		MESSAGE,
-		EXTRA,
+    // Model definition
+    enum LogListModelColumns {
+        DATE,
+        CRITICALITY,
+        THREAD,
+        LOGGER,
+        SOURCE,
+        MESSAGE,
+        EXTRA,
 
-		COLUMN_COUNT
-	};
+        COLUMN_COUNT
+    };
 
-	const FilteredLogData& GetData() const { return _data; }
-	FilteredLogData& GetData() { return _data; }
+    const FilteredLogData& GetData() const { return _data; }
+    FilteredLogData& GetData() { return _data; }
 
-	// Model helpers
-	size_t Count()const;
-	const Entry& Get(size_t id)const;
-	Entry& Get(size_t id);
-	const Entry& Get(wxDataViewItem item)const;
-	Entry& Get(wxDataViewItem item);
-	unsigned int GetPos(wxDataViewItem item)const;
+    // Model helpers
+    size_t Count()const;
+    const LogEntry& Get(size_t id)const;
+    LogEntry& Get(size_t id);
+    const LogEntry& Get(wxDataViewItem item)const;
+    LogEntry& Get(wxDataViewItem item);
+    unsigned int GetPos(wxDataViewItem item)const;
 
 protected:
-	void Update();
-	virtual void Updated(FilteredLogData& data) override;
+    void Update();
+    virtual void Updated(FilteredLogData& data) override;
 
-	FilteredLogData& _data;
+    FilteredLogData& _data;
 
 };
 
@@ -74,45 +74,45 @@ protected:
 class LoggerListModel : public wxDataViewVirtualListModel, protected FilteredLogData::Listener
 {
 public:
-	LoggerListModel(FilteredLogData& data);
+    LoggerListModel(FilteredLogData& data);
 
-	const FilteredLogData& GetData() const { return _data; }
-	FilteredLogData& GetData() { return _data; }
+    const FilteredLogData& GetData() const { return _data; }
+    FilteredLogData& GetData() { return _data; }
 
-	// DVVLM definitions:
-	virtual unsigned int GetColumnCount()const;
-	virtual wxString GetColumnType(unsigned int col)const;
+    // DVVLM definitions:
+    virtual unsigned int GetColumnCount()const;
+    virtual wxString GetColumnType(unsigned int col)const;
 
-	virtual void GetValueByRow(wxVariant &variant, unsigned int row, unsigned int col) const;
-	virtual bool SetValueByRow(const wxVariant &variant, unsigned int row, unsigned int col);
-	virtual bool GetAttrByRow(unsigned int row, unsigned int col, wxDataViewItemAttr &attr)const;
+    virtual void GetValueByRow(wxVariant &variant, unsigned int row, unsigned int col) const;
+    virtual bool SetValueByRow(const wxVariant &variant, unsigned int row, unsigned int col);
+    virtual bool GetAttrByRow(unsigned int row, unsigned int col, wxDataViewItemAttr &attr)const;
 
-	// Model definition
-	enum LoggerListModelColumns {
-		SHOWN,
-		LOGGER,
+    // Model definition
+    enum LoggerListModelColumns {
+        SHOWN,
+        LOGGER,
 
-		COUNT,
+        COUNT,
 
-		CRIT_FATAL,
-		CRIT_CRITICAL,
-		CRIT_ERROR,
-		CRIT_WARNING,
-		CRIT_INFO,
-		CRIT_DEBUG,
-		CRIT_TRACE,
+        CRIT_FATAL,
+        CRIT_CRITICAL,
+        CRIT_ERROR,
+        CRIT_WARNING,
+        CRIT_INFO,
+        CRIT_DEBUG,
+        CRIT_TRACE,
 
-		COLUMN_COUNT
-	};
+        COLUMN_COUNT
+    };
 
-	// Model helpers
-	long GetLoggerId(wxDataViewItem item)const;
+    // Model helpers
+    long GetLoggerId(wxDataViewItem item)const;
 
 protected:
-	void Update();
-	virtual void Updated(FilteredLogData& data) override;
+    void Update();
+    virtual void Updated(FilteredLogData& data) override;
 
-	FilteredLogData& _data;
+    FilteredLogData& _data;
 };
 
 
@@ -120,45 +120,45 @@ protected:
 class FileListModel : public wxDataViewVirtualListModel, protected FilteredLogData::Listener
 {
 public:
-	FileListModel(FilteredLogData& data);
+    FileListModel(FilteredLogData& data);
 
-	const FilteredLogData& GetData() const { return _data; }
-	FilteredLogData& GetData() { return _data; }
+    const FilteredLogData& GetData() const { return _data; }
+    FilteredLogData& GetData() { return _data; }
 
-	// DVVLM definitions:
-	virtual unsigned int GetColumnCount()const;
-	virtual wxString GetColumnType(unsigned int col)const;
+    // DVVLM definitions:
+    virtual unsigned int GetColumnCount()const;
+    virtual wxString GetColumnType(unsigned int col)const;
 
-	virtual void GetValueByRow(wxVariant &variant, unsigned int row, unsigned int col) const;
-	virtual bool SetValueByRow(const wxVariant &variant, unsigned int row, unsigned int col);
-	virtual bool GetAttrByRow(unsigned int row, unsigned int col, wxDataViewItemAttr &attr)const;
+    virtual void GetValueByRow(wxVariant &variant, unsigned int row, unsigned int col) const;
+    virtual bool SetValueByRow(const wxVariant &variant, unsigned int row, unsigned int col);
+    virtual bool GetAttrByRow(unsigned int row, unsigned int col, wxDataViewItemAttr &attr)const;
 
-	// Model definition
-	enum FileListModelColumns {
-		SHOWN,
-		FILENAME,
+    // Model definition
+    enum FileListModelColumns {
+        SHOWN,
+        FILENAME,
 
-		COUNT,
+        COUNT,
 
-		CRIT_FATAL,
-		CRIT_CRITICAL,
-		CRIT_ERROR,
-		CRIT_WARNING,
-		CRIT_INFO,
-		CRIT_DEBUG,
-		CRIT_TRACE,
+        CRIT_FATAL,
+        CRIT_CRITICAL,
+        CRIT_ERROR,
+        CRIT_WARNING,
+        CRIT_INFO,
+        CRIT_DEBUG,
+        CRIT_TRACE,
 
-		COLUMN_COUNT
-	};
+        COLUMN_COUNT
+    };
 
-	// Model helpers
-	uint16_t GetFileId(wxDataViewItem item)const;
+    // Model helpers
+    uint16_t GetFileId(wxDataViewItem item)const;
 
 protected:
-	void Update();
-	virtual void Updated(FilteredLogData& data) override;
+    void Update();
+    virtual void Updated(FilteredLogData& data) override;
 
-	FilteredLogData& _data;
+    FilteredLogData& _data;
 };
 
 

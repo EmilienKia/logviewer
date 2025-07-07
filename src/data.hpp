@@ -1,7 +1,7 @@
 /* -*- Mode: C++; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-  */
 /*
 * data.hpp
-* Copyright (C) 2019 Emilien Kia <Emilien.Kia+dev@gmail.com>
+* Copyright (C) 2019-2025 Emilien Kia <Emilien.Kia+dev@gmail.com>
 *
 * logviewer is free software: you can redistribute it and/or modify it
 * under the terms of the GNU General Public License as published by the
@@ -22,339 +22,343 @@
 
 #include <algorithm>
 #include <array>
+#include <string>
+#include <string_view>
 #include <vector>
 #include <set>
-
-#include <wx/arrstr.h>
+#include <cstdint>
+#include <chrono>
+#include <optional>
 
 class LogData;
 
-inline wxString str2wx(const std::string& str)
+typedef std::chrono::system_clock::time_point Timestamp;
+
+enum LogLevel
 {
-	return !str.empty() ? wxString(str.data(), wxConvUTF8) : wxString();
-}
+    LOG_UNKNOWN,
+    LOG_TRACE,
+    LOG_DEBUG,
+    LOG_INFO,
+    LOG_WARNING,
+    LOG_ERROR,
+    LOG_CRITICAL,
+    LOG_FATAL,
 
-inline std::string wx2str(const wxString str)
-{
-	return std::string(str.utf8_str());
-}
-
-
-class wxStringCache : public std::vector<wxString>
-{
-public:
-	wxStringCache();
-
-	long Find(const wxString& str)const;
-
-	long Get(const wxString& str);
-	const wxString& GetString(long id)const;
+    LOG_LEVEL_COUNT
 };
 
-
-enum CRITICALITY_LEVEL
-{
-	LOG_UNKNOWN,
-	LOG_TRACE,
-	LOG_DEBUG,
-	LOG_INFO,
-	LOG_WARNING,
-	LOG_ERROR,
-	LOG_CRITICAL,
-	LOG_FATAL,
-
-	LOG_CRITICALITY_COUNT
+struct ParsedEntry {
+    Timestamp date;
+    LogLevel level = LogLevel::LOG_UNKNOWN;
+    long pid = 0;
+    std::string_view thread;
+    std::string_view logger;
+    std::string_view source;
+    std::string_view message;
+// TODO Support extra line data
+    std::optional<std::string> extra;
 };
-
-
-struct Entry
-{
-	wxDateTime date;
-	uint16_t file;
-	CRITICALITY_LEVEL criticality;
-	long thread;
-	long logger;
-	long source;
-	wxString message;
-	wxString extra;
-};
-
 
 struct FileDescriptor
 {
-	FileDescriptor():id(0), path() {}
+    FileDescriptor(): id(0), path() {}
 
-	FileDescriptor(uint16_t id, wxString path):id(id), path(path) {}
-	FileDescriptor(const FileDescriptor& fd) = default; //:id(fd.id), path(fd.path), entryCount(fd.entryCount), criticalityCounts(fd.criticalityCounts) {}
-	FileDescriptor(FileDescriptor&& fd) = default;
+    FileDescriptor(uint16_t id, const std::string& path): id(id), path(path) {}
+    FileDescriptor(const FileDescriptor& fd) = default;
+    FileDescriptor(FileDescriptor&& fd) = default;
 
-	FileDescriptor& operator=(const FileDescriptor&) = default;
-	FileDescriptor& operator=(FileDescriptor&&) = default;
+    FileDescriptor& operator=(const FileDescriptor&) = default;
+    FileDescriptor& operator=(FileDescriptor&&) = default;
 
-	uint16_t id;
-	wxString path;
+    uint16_t id;
+    std::string path;
 
-	enum FILE_DESC_STATUS
-	{
-		FILE_LOADED,	// The file have already been loaded
-		FILE_NEW,		// The file is new, never loaded
-		FILE_RELOAD,	// The file is to reload, have already been loaded.
-		FILE_REMOVED	// The file will be removed
-	} status = FILE_NEW;
+    enum FILE_DESC_STATUS
+    {
+        FILE_LOADED,	// The file has already been loaded
+        FILE_NEW,		// The file is new, never loaded
+        FILE_RELOAD,	// The file is to reload, have already been loaded.
+        FILE_REMOVED	// The file will be removed
+    } status = FILE_NEW;
 
-	size_t entryCount;
-	std::array<size_t, LOG_CRITICALITY_COUNT> criticalityCounts;
-
-
-	static wxString StatusToString(FILE_DESC_STATUS status);
+    size_t entryCount = 0;
+    std::array<size_t, LOG_LEVEL_COUNT> levelCounts{0, 0, 0, 0, 0, 0, 0, 0};
 };
-
 
 class FileData
 {
 public:
-	struct Listener
-	{
-		virtual void Updated(FileData& data) = 0;
-	};
+    struct Listener
+    {
+        virtual void Updated(FileData& data) = 0;
+    };
 
-
-	typedef std::vector<FileDescriptor> FileVector;
-	typedef std::vector<FileDescriptor>::iterator iterator;
-	typedef std::vector<FileDescriptor>::const_iterator const_iterator;
+    typedef std::vector<FileDescriptor>::iterator iterator;
+    typedef std::vector<FileDescriptor>::const_iterator const_iterator;
 
 protected:
-	std::vector<FileDescriptor> _fileDescriptors;
+    std::vector<FileDescriptor> _fileDescriptors;
 
 private:
-	std::set<Listener*> _fileListeners;
+    std::set<Listener*> _fileListeners;
 
 public:
-	FileData() = default;
+    FileData() = default;
 
+    uint16_t AddFile(const std::string& path);
 
-	uint16_t AddFile(const wxString path);
+    size_t GetFileCount()const {return _fileDescriptors.size();}
+    FileDescriptor& GetFile(const std::string& file);
 
-	size_t GetFileCount()const {return _fileDescriptors.size();}
-	FileDescriptor& GetFile(const wxString& file);
-	FileDescriptor& GetFile(uint16_t id);
-	const FileDescriptor& GetFile(uint16_t id)const;
-	const FileDescriptor* FindFile(const wxString& file)const;
-	const FileDescriptor* FindFile(uint16_t id)const;
+    FileDescriptor& GetFile(uint16_t id);
+    const FileDescriptor& GetFile(uint16_t id)const;
 
-	long GetFileEntryCount(uint16_t fileid) const {return GetFile(fileid).entryCount; }
-	long GetFileCriticalityEntryCount(uint16_t fileid, CRITICALITY_LEVEL criticality) const {return GetFile(fileid).criticalityCounts[criticality]; }
+    const FileDescriptor* FindFile(const std::string& file)const;
+    const FileDescriptor* FindFile(uint16_t id)const;
 
-	iterator begin() {return _fileDescriptors.begin();}
-	const_iterator begin()const {return _fileDescriptors.begin();}
-	iterator end() {return _fileDescriptors.end();}
-	const_iterator end()const {return _fileDescriptors.end();}
-	
-	template<typename Pred>
-	void RemoveFileIf(Pred pred) {
-		_fileDescriptors.erase(std::remove_if(_fileDescriptors.begin(), _fileDescriptors.end(), pred), _fileDescriptors.end());
-	}
+    long GetFileEntryCount(uint16_t fileid) const {return GetFile(fileid).entryCount; }
+    long GetFileLogLevelEntryCount(uint16_t fileid, LogLevel criticality) const {return GetFile(fileid).levelCounts[criticality]; }
 
-	// @name Stats
-	// @{
-	void ClearStatistics();
-	// @}
+    iterator begin() {return _fileDescriptors.begin();}
+    const_iterator begin()const {return _fileDescriptors.begin();}
+    iterator end() {return _fileDescriptors.end();}
+    const_iterator end()const {return _fileDescriptors.end();}
 
-	// @name Listener management
-	// @{
-	void AddListener(Listener* listener) { _fileListeners.insert(listener); }
-	void RemListener(Listener* listener) { _fileListeners.erase(listener); }
-	// 
+    template<typename Pred>
+    void RemoveFileIf(Pred pred) {
+        _fileDescriptors.erase(std::remove_if(_fileDescriptors.begin(), _fileDescriptors.end(), pred), _fileDescriptors.end());
+    }
+
+    // @name Stats
+    // @{
+    void ClearStatistics();
+    // @}
+
+    // @name Listener management
+    // @{
+    void AddListener(Listener* listener) { _fileListeners.insert(listener); }
+    void RemListener(Listener* listener) { _fileListeners.erase(listener); }
+    //
 
 protected:
-	void notifyUpdated() {
-		for(Listener* listener : _fileListeners)
-			listener->Updated(*this);
-	}
+    void notifyUpdated() {
+        for(Listener* listener : _fileListeners)
+            listener->Updated(*this);
+    }
 };
 
 
-class Formatter
+
+struct LogEntry {
+    uint16_t file = 0;
+    Timestamp date;
+    LogLevel level = LogLevel::LOG_UNKNOWN;
+    long pid    = -1;
+    long thread = -1;
+    long logger = -1;
+    long source = -1;
+    std::string message;
+    std::string extra;
+};
+
+
+class StringCache : public std::vector<std::string>
 {
 public:
-	static const wxString& FormatCriticality(CRITICALITY_LEVEL c);
-	static wxString FormatDate(const wxDateTime& date);
-};
+    StringCache();
 
+    long Find(const std::string& str)const;
+    long Find(const std::string_view& str)const;
+    long Get(const std::string& str);
+    long Get(const std::string_view& str);
+
+    const std::string& GetString(long id)const;
+
+    static std::string_view Trim(const std::string_view& str);
+};
 
 
 class LogData
 {
 public:
-	struct Listener
-	{
-		virtual void Updated(LogData& data) = 0;
-	};
+    struct Listener
+    {
+        virtual void Updated(LogData& data) = 0;
+    };
 
-	typedef std::vector<Entry> FileVector;
-	typedef std::vector<Entry>::iterator iterator;
-	typedef std::vector<Entry>::const_iterator const_iterator;
+    typedef std::vector<LogEntry>::iterator iterator;
+    typedef std::vector<LogEntry>::const_iterator const_iterator;
 
 protected:
-	FileData& _fileData;
+    FileData& _fileData;
 
-	wxStringCache _threads, _loggers, _sources;
+    StringCache _threads, _loggers, _sources;
 
-	std::vector<Entry> _entries;
+    std::vector<LogEntry> _entries;
 
-	std::array<size_t, LOG_CRITICALITY_COUNT> _criticalityCounts;
+    // Entry count per log level
+    std::array<size_t, LOG_LEVEL_COUNT> _levelCounts{0, 0, 0, 0, 0, 0, 0, 0};
 
-	std::vector<long> _loggersEntryCount;
-	std::vector<std::array<size_t, LOG_CRITICALITY_COUNT>> _criticalityLoggerCounts;
+    std::vector<long> _loggersEntryCount;
+    std::vector<std::array<size_t, LOG_LEVEL_COUNT>> _levelLoggerCounts;
 
-	std::set<Listener*> _listeners;
-	void NotifyUpdate();
+    std::set<Listener*> _listeners;
+    void NotifyUpdate();
 
 public:
-	LogData(FileData& fileData);
+    LogData(FileData& fileData);
 
-	FileData& GetFileData() {return _fileData; }
-	const FileData& GetFileData() const {return _fileData; }
+    FileData& GetFileData() {return _fileData; }
+    const FileData& GetFileData() const {return _fileData; }
 
-	void Clear();
-	void AddLog(const wxDateTime& date, uint16_t file, CRITICALITY_LEVEL criticality, wxString thread, wxString logger, wxString source, wxString message);
-	void AddLog(const wxDateTime& date, uint16_t file, CRITICALITY_LEVEL criticality, long thread, long logger, long source, const wxString& message);
+    void Clear();
 
-	template<typename Pred>
-	void RemoveLogIf(Pred pred) {
-		_entries.erase(std::remove_if(_entries.begin(), _entries.end(), pred), _entries.end());
-	}
-
-	void Synchronize();
-
-	void SortLogsByDate();
-	void SortAndReindexColumns();
-	void UpdateStatistics();
-
-	size_t EntryCount()const { return _entries.size(); }
-
-	Entry& GetEntry(size_t index) { return _entries[index]; }
-	const Entry& GetEntry(size_t index) const { return _entries[index]; }
-
-	Entry& GetLastEntry() { return _entries.back(); }
-	const Entry& GetLastEntry() const { return _entries.back(); }
-
-	iterator begin() {return _entries.begin();}
-	const_iterator begin()const {return _entries.begin();}
-	iterator end() {return _entries.end();}
-	const_iterator end()const {return _entries.end();}
+    void AddLog(uint16_t file, const ParsedEntry& entry);
+    void AddLog(uint16_t file, const Timestamp& date, LogLevel level, long pid, const std::string& thread, const std::string& logger, const std::string& source, const std::string& message);
+    void AddLog(uint16_t file, const Timestamp& date, LogLevel level, long pid, long thread, long logger, long source, const std::string& message);
 
 
-	size_t GetCriticalityCount(CRITICALITY_LEVEL level)const { return _criticalityCounts[level]; }
-	wxDateTime GetBeginDate()const;
-	wxDateTime GetEndDate()const;
+    template<typename Pred>
+    void RemoveLogIf(Pred pred) {
+        _entries.erase(std::remove_if(_entries.begin(), _entries.end(), pred), _entries.end());
+    }
 
-	size_t GetThreadCount()const { return _threads.size(); }
-	size_t GetLoggerCount()const { return _loggers.size(); }
-	size_t GetSourceCount()const { return _sources.size(); }
+    void Synchronize();
 
-	const wxString& GetThreadLabel(long id)const { return _threads.GetString(id); }
-	const wxString& GetLoggerLabel(long id)const { return _loggers.GetString(id); }
-	const wxString& GetSourceLabel(long id)const { return _sources.GetString(id); }
+    void SortLogsByDate();
+    void SortAndReindexColumns();
+    void UpdateStatistics();
 
-	long GetThread(const wxString& name) { return _threads.Get(name); }
-	long GetLogger(const wxString& name) { return _loggers.Get(name); }
-	long GetSource(const wxString& name) { return _sources.Get(name); }
+    size_t EntryCount()const { return _entries.size(); }
 
-	long FindThread(const wxString& name) const { return _threads.Find(name); }
-	long FindLogger(const wxString& name) const { return _loggers.Find(name); }
-	long FindSource(const wxString& name) const { return _sources.Find(name); }
+    LogEntry& GetEntry(size_t index) { return _entries[index]; }
+    const LogEntry& GetEntry(size_t index) const { return _entries[index]; }
 
-	long GetLoggerEntryCount(long logger) const {return _loggersEntryCount[logger]; }
-	long GetLoggerCriticalityEntryCount(long logger, CRITICALITY_LEVEL criticality) const {return _criticalityLoggerCounts[logger][criticality]; }
+    LogEntry& front() { return _entries.front(); }
+    const LogEntry& front() const { return _entries.front(); }
 
+    LogEntry& back() { return _entries.back(); }
+    const LogEntry& back() const { return _entries.back(); }
 
-	// @name Listener management
-	// @{
-	void AddListener(Listener* listener) { _listeners.insert(listener); }
-	void RemListener(Listener* listener) { _listeners.erase(listener); }
-	// 
+    iterator begin() {return _entries.begin();}
+    const_iterator begin()const {return _entries.begin();}
+    iterator end() {return _entries.end();}
+    const_iterator end()const {return _entries.end();}
+
+    size_t GetLevelLogCount(LogLevel level)const { return _levelCounts[level]; }
+    Timestamp GetBeginDate()const;
+    Timestamp GetEndDate()const;
+
+    size_t GetThreadCount()const { return _threads.size(); }
+    size_t GetLoggerCount()const { return _loggers.size(); }
+    size_t GetSourceCount()const { return _sources.size(); }
+
+    const std::string& GetThreadLabel(long id)const { return _threads.GetString(id); }
+    const std::string& GetLoggerLabel(long id)const { return _loggers.GetString(id); }
+    const std::string& GetSourceLabel(long id)const { return _sources.GetString(id); }
+
+    long GetThread(const std::string& name) { return _threads.Get(name); }
+    long GetLogger(const std::string& name) { return _loggers.Get(name); }
+    long GetSource(const std::string& name) { return _sources.Get(name); }
+
+    long FindThread(const std::string& name) const { return _threads.Find(name); }
+    long FindLogger(const std::string& name) const { return _loggers.Find(name); }
+    long FindSource(const std::string& name) const { return _sources.Find(name); }
+
+    long GetLoggerEntryCount(long logger) const {return _loggersEntryCount[logger]; }
+    long GetLevelLoggerEntryCount(long logger, LogLevel criticality) const {return _levelLoggerCounts[logger][criticality]; }
+
+    // @name Listener management
+    // @{
+    void AddListener(Listener* listener) { _listeners.insert(listener); }
+    void RemListener(Listener* listener) { _listeners.erase(listener); }
+    // @}
+
 };
+
+
+
+
 
 
 class FilteredLogData : protected LogData::Listener
 {
 public:
-	struct Listener
-	{
-		virtual void Updated(FilteredLogData& data) = 0;
-	};
+    struct Listener
+    {
+        virtual void Updated(FilteredLogData& data) = 0;
+    };
 
 protected:
-	LogData & _src;
+    LogData & _src;
 
-	std::vector<long> _data;
-	std::array<size_t, LOG_CRITICALITY_COUNT> _criticalityCounts;
+    std::vector<long> _data;
+    std::array<size_t, LOG_LEVEL_COUNT> _levelCounts;
 
-	std::vector<bool> _shownLoggers, _shownFiles;
+    std::vector<bool> _shownLoggers, _shownFiles;
 
-	CRITICALITY_LEVEL _criticality = CRITICALITY_LEVEL::LOG_INFO;
-	wxDateTime _start, _end;
+    LogLevel _criticality = LogLevel::LOG_INFO;
+    Timestamp _start = Timestamp::min(), _end = Timestamp::max();
 
-	virtual void Updated(LogData & data) override;
+    virtual void Updated(LogData & data) override;
 
-	void Update();
+    void Update();
 
-	std::set<Listener*> _listeners;
-	void NotifyUpdate();
+    std::set<Listener*> _listeners;
+    void NotifyUpdate();
 
 private:
-	void DoSelectAllLoggers();
+    void DoSelectAllLoggers();
 
 public:
-	FilteredLogData(LogData& data);
-	~FilteredLogData();
+    FilteredLogData(LogData& data);
+    ~FilteredLogData();
 
-	const LogData & GetLogData() const { return _src; }
-	LogData & GetLogData() { return _src; }
+    const LogData & GetLogData() const { return _src; }
+    LogData & GetLogData() { return _src; }
 
-	FileData& GetFileData() {return _src.GetFileData(); }
-	const FileData& GetFileData() const {return _src.GetFileData(); }
+    FileData& GetFileData() {return _src.GetFileData(); }
+    const FileData& GetFileData() const {return _src.GetFileData(); }
 
-	size_t EntryCount()const { return _data.size(); }
+    size_t EntryCount()const { return _data.size(); }
 
-	Entry& GetEntry(size_t index) { return GetLogData().GetEntry(_data[index]); }
-	const Entry& GetEntry(size_t index) const { return GetLogData().GetEntry(_data[index]); }
+    LogEntry& GetEntry(size_t index) { return GetLogData().GetEntry(_data[index]); }
+    const LogEntry& GetEntry(size_t index) const { return GetLogData().GetEntry(_data[index]); }
 
-	size_t GetCriticalityCount(CRITICALITY_LEVEL level)const { return _criticalityCounts[level]; }
-	wxDateTime GetBeginDate()const;
-	wxDateTime GetEndDate()const;
+    size_t GetCriticalityCount(LogLevel level)const { return _levelCounts[level]; }
+    Timestamp GetBeginDate()const;
+    Timestamp GetEndDate()const;
 
-	void ClearFilter();
-	void SetCriticalityFilterLevel(CRITICALITY_LEVEL criticality);
-	void SetStartDate(const wxDateTime& date);
-	void SetEndDate(const wxDateTime& date);
-	void ResetStartDate();
-	void ResetEndDate();
+    void ClearFilter();
+    void SetCriticalityFilterLevel(LogLevel criticality);
+    void SetStartDate(const Timestamp& date);
+    void SetEndDate(const Timestamp& date);
+    void ResetStartDate();
+    void ResetEndDate();
 
-	void DisplayAllLoggers();
-	void HideAllLoggers();
-	void DisplayLogger(const wxString& logger, bool display = true);
-	void DisplayLogger(long logger, bool display = true);
-	void DisplayOnlyLogger(long logger);
-	void DisplayAllButLogger(long logger);
-	void ToggleLogger(long logger);
+    void DisplayAllLoggers();
+    void HideAllLoggers();
+    void DisplayLogger(const std::string& logger, bool display = true);
+    void DisplayLogger(long logger, bool display = true);
+    void DisplayOnlyLogger(long logger);
+    void DisplayAllButLogger(long logger);
+    void ToggleLogger(long logger);
 
-	bool IsLoggerShown(const wxString& logger)const;
-	bool IsLoggerShown(long logger)const;
+    bool IsLoggerShown(const std::string& logger)const;
+    bool IsLoggerShown(long logger)const;
 
-	void DisplayAllFiles();
-	void HideAllFiles();
-	void DisplayFile(const wxString& file, bool display = true);
-	void DisplayFile(uint16_t file, bool display = true);
-	void ToggleFile(uint16_t file);
+    void DisplayAllFiles();
+    void HideAllFiles();
+    void DisplayFile(const std::string& file, bool display = true);
+    void DisplayFile(uint16_t file, bool display = true);
+    void ToggleFile(uint16_t file);
 
-	bool IsFileShown(const wxString& file)const;
-	bool IsFileShown(uint16_t file)const;
+    bool IsFileShown(const std::string& file)const;
+    bool IsFileShown(uint16_t file)const;
 
-
-	void AddListener(Listener* listener) { _listeners.insert(listener); }
-	void RemListener(Listener* listener) { _listeners.erase(listener); }
+    void AddListener(Listener* listener) { _listeners.insert(listener); }
+    void RemListener(Listener* listener) { _listeners.erase(listener); }
 };
 
 

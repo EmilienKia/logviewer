@@ -1,7 +1,7 @@
 /* -*- Mode: C++; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-  */
 /*
  * files.hpp
- * Copyright (C) 2019 Emilien Kia <Emilien.Kia+dev@gmail.com>
+ * Copyright (C) 2019-2025 Emilien Kia <Emilien.Kia+dev@gmail.com>
  *
  * logviewer is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -31,68 +31,68 @@
 class FileDialogListModel : public wxDataViewVirtualListModel, protected FileData::Listener
 {
 public:
-	FileDialogListModel(FileData& data);
-	~FileDialogListModel();
+    FileDialogListModel(FileData& data);
+    ~FileDialogListModel();
 
-	const FileData& GetData() const { return _data; }
-	FileData& GetData() { return _data; }
+    const FileData& GetData() const { return _data; }
+    FileData& GetData() { return _data; }
 
-	// DVVLM definitions:
-	virtual unsigned int GetColumnCount()const;
-	virtual wxString GetColumnType(unsigned int col)const;
+    // DVVLM definitions:
+    virtual unsigned int GetColumnCount()const;
+    virtual wxString GetColumnType(unsigned int col)const;
 
-	virtual void GetValueByRow(wxVariant &variant, unsigned int row, unsigned int col) const;
-	virtual bool SetValueByRow(const wxVariant &variant, unsigned int row, unsigned int col);
-	virtual bool GetAttrByRow(unsigned int row, unsigned int col, wxDataViewItemAttr &attr)const;
+    virtual void GetValueByRow(wxVariant &variant, unsigned int row, unsigned int col) const;
+    virtual bool SetValueByRow(const wxVariant &variant, unsigned int row, unsigned int col);
+    virtual bool GetAttrByRow(unsigned int row, unsigned int col, wxDataViewItemAttr &attr)const;
 
-	// Model definition
-	enum FileDialogListModelColumns {
-		STATUS,
-		FILENAME,
+    // Model definition
+    enum FileDialogListModelColumns {
+        STATUS,
+        FILENAME,
 
-		READER,
-		LAYOUT,
+        READER,
+        LAYOUT,
 
-		COLUMN_COUNT
-	};
+        COLUMN_COUNT
+    };
 
-	// Model helpers
-	uint16_t GetFileId(wxDataViewItem item)const;
-	const FileDescriptor* GetFile(wxDataViewItem item)const;
+    // Model helpers
+    uint16_t GetFileId(wxDataViewItem item)const;
+    const FileDescriptor* GetFile(wxDataViewItem item)const;
 
-	void Update();
+    void Update();
 
 protected:
-	virtual void Updated(FileData& data) override;
+    virtual void Updated(FileData& data) override;
 
-	FileData& _data;
+    FileData& _data;
 };
 
 
 
 class FileOpenDialog : public wxDialog
 {
-	DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 public:
-	FileOpenDialog() = default;
-	FileOpenDialog(wxWindow *parent, wxWindowID id, const wxString &title, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize)
-	{
-		Create(parent, id, title, pos, size);
-	}
+    FileOpenDialog() = default;
+    FileOpenDialog(wxWindow *parent, wxWindowID id, const wxString &title, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize)
+    {
+        Create(parent, id, title, pos, size);
+    }
 
-	bool Create (wxWindow *parent, wxWindowID id, const wxString &title, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize);
+    bool Create (wxWindow *parent, wxWindowID id, const wxString &title, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize);
 
 protected:
-	wxDataViewCtrl* _files;
+    wxDataViewCtrl* _files;
 
-	FileDialogListModel* _filesModel;
+    FileDialogListModel* _filesModel;
 
-	void OnOpenFilesButton(wxCommandEvent& event);
-	void OnReloadFilesButton(wxCommandEvent& event);
-	void OnRemoveFilesButton(wxCommandEvent& event);
+    void OnOpenFilesButton(wxCommandEvent& event);
+    void OnReloadFilesButton(wxCommandEvent& event);
+    void OnRemoveFilesButton(wxCommandEvent& event);
 
-	void OnUpdateReloadFilesButton(wxUpdateUIEvent& event);
-	void OnUpdateRemoveFilesButton(wxUpdateUIEvent& event);
+    void OnUpdateReloadFilesButton(wxUpdateUIEvent& event);
+    void OnUpdateRemoveFilesButton(wxUpdateUIEvent& event);
 };
 
 

@@ -1,7 +1,7 @@
 /* -*- Mode: C++; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-  */
 /*
  * frame.hpp
- * Copyright (C) 2018-2019 Emilien Kia <Emilien.Kia+dev@gmail.com>
+ * Copyright (C) 2018-2025 Emilien Kia <Emilien.Kia+dev@gmail.com>
  *
  * logviewer is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -40,121 +40,121 @@ class wxTimePickerCtrl;
 
 class DateTimeCtrl : public wxWindow
 {
-	DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 public:
-	DateTimeCtrl();
-	DateTimeCtrl(wxWindow *parent, wxWindowID id, const wxBitmap &revert_bitmap, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize);
-	virtual ~DateTimeCtrl() = default;
-	bool Create(wxWindow *parent, wxWindowID id, const wxBitmap &revert_bitmap, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize);
+    DateTimeCtrl();
+    DateTimeCtrl(wxWindow *parent, wxWindowID id, const wxBitmap &revert_bitmap, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize);
+    virtual ~DateTimeCtrl() = default;
+    bool Create(wxWindow *parent, wxWindowID id, const wxBitmap &revert_bitmap, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize);
 
-	wxDateTime GetValue()const {return _curr;}
-	void SetValue(const wxDateTime& date);
+    wxDateTime GetValue()const {return _curr;}
+    void SetValue(const wxDateTime& date);
 
-	void SetDefault(const wxDateTime& date);
+    void SetDefault(const wxDateTime& date);
 
 protected:
-	wxDateTime _curr, _def;
+    wxDateTime _curr, _def;
 
-	wxDatePickerCtrl* _date;
-	wxTimePickerCtrl* _time;
+    wxDatePickerCtrl* _date;
+    wxTimePickerCtrl* _time;
 
-	void OnDateEvent(wxDateEvent& event);
-	void OnRevertEvent(wxCommandEvent& event);
-	void SendNotification();
+    void OnDateEvent(wxDateEvent& event);
+    void OnRevertEvent(wxCommandEvent& event);
+    void SendNotification();
 };
 
 
 class Frame: public wxFrame, public LogData::Listener
 {
-	DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 public:
-	Frame();
-	~Frame();
+    Frame();
+    ~Frame();
 
-	void Search(bool dirNext = true);
+    void Search(bool dirNext = true);
 
-	void SearchNext(){Search(true);}
-	void SearchPrev(){Search(false);}
+    void SearchNext(){Search(true);}
+    void SearchPrev(){Search(false);}
 
 protected:
-	void init();
+    void init();
 
-	virtual void Updated(LogData& data) override;
+    virtual void Updated(LogData& data) override;
 
-	//void UpdateLoggerFilterFromListBox();
-	void UpdateListBoxFromLoggerFilter();
+    //void UpdateLoggerFilterFromListBox();
+    void UpdateListBoxFromLoggerFilter();
 
-	wxAuiManager _manager;
-	wxRibbonBar*  _ribbon;
+    wxAuiManager _manager;
+    wxRibbonBar*  _ribbon;
 
-	LogListModel* _logModel;
-	LoggerListModel* _loggerModel;
-	FileListModel* _fileModel;
+    LogListModel* _logModel;
+    LoggerListModel* _loggerModel;
+    FileListModel* _fileModel;
 
-	wxDataViewCtrl* _logs;
-	wxDataViewCtrl* _loggers;
-	wxDataViewCtrl* _files;
-	wxStatusBar* _status;
+    wxDataViewCtrl* _logs;
+    wxDataViewCtrl* _loggers;
+    wxDataViewCtrl* _files;
+    wxStatusBar* _status;
 
-	wxSlider*		_criticalitySlider;
-	wxStaticText*	_criticalityText;
+    wxSlider*		_criticalitySlider;
+    wxStaticText*	_criticalityText;
 
-	DateTimeCtrl*	_begin;
-	DateTimeCtrl*	_end;
+    DateTimeCtrl*	_begin;
+    DateTimeCtrl*	_end;
 
-	wxTextCtrl*	_extraText;
+    wxTextCtrl*	_extraText;
 
-	wxSearchCtrl* _search;
-	bool _searchDir = true;
-	bool _searchCycle = true;
-	bool _searchCaseSensitive = false;
-	bool _searchEscape = false;
-	bool _searchRegex = false;
+    wxSearchCtrl* _search;
+    bool _searchDir = true;
+    bool _searchCycle = true;
+    bool _searchCaseSensitive = false;
+    bool _searchEscape = false;
+    bool _searchRegex = false;
 
 private:
-	void OnRibbonButtonClicked(wxEvent/*wxRibbonButtonBarEvent*/& event);
+    void OnRibbonButtonClicked(wxEvent/*wxRibbonButtonBarEvent*/& event);
 
-	void OnCriticalitySliderEvent(wxCommandEvent& event);
+    void OnCriticalitySliderEvent(wxCommandEvent& event);
 
-	void OnLogSelChanged(wxDataViewEvent& event);
-	void OnLogActivated(wxDataViewEvent& event);
-	void OnLogContextMenu(wxDataViewEvent& event);
+    void OnLogSelChanged(wxDataViewEvent& event);
+    void OnLogActivated(wxDataViewEvent& event);
+    void OnLogContextMenu(wxDataViewEvent& event);
 
-	void OnBeginDateEvent(wxDateEvent& event);
-	void OnEndDateEvent(wxDateEvent& event);
+    void OnBeginDateEvent(wxDateEvent& event);
+    void OnEndDateEvent(wxDateEvent& event);
 
-	void OnDisplayExtra(wxCommandEvent& event);
-	void OnSetAsBegin(wxCommandEvent& event);
-	void OnSetAsEnd(wxCommandEvent& event);
+    void OnDisplayExtra(wxCommandEvent& event);
+    void OnSetAsBegin(wxCommandEvent& event);
+    void OnSetAsEnd(wxCommandEvent& event);
 
-	void OnLoggersExtButtonActivated(wxRibbonPanelEvent& event);
-	void OnLoggersItemActivated(wxDataViewEvent& event);
-	void OnLoggerShowAll(wxCommandEvent& event);
-	void OnLoggerShowNone(wxCommandEvent& event);
-	void OnLoggerShowOnlyCurrent(wxCommandEvent& event);
-	void OnLoggerShowAllButCurrent(wxCommandEvent& event);
-	void OnLoggerFocusPrevious(wxCommandEvent& event);
-	void OnLoggerFocusNext(wxCommandEvent& event);
+    void OnLoggersExtButtonActivated(wxRibbonPanelEvent& event);
+    void OnLoggersItemActivated(wxDataViewEvent& event);
+    void OnLoggerShowAll(wxCommandEvent& event);
+    void OnLoggerShowNone(wxCommandEvent& event);
+    void OnLoggerShowOnlyCurrent(wxCommandEvent& event);
+    void OnLoggerShowAllButCurrent(wxCommandEvent& event);
+    void OnLoggerFocusPrevious(wxCommandEvent& event);
+    void OnLoggerFocusNext(wxCommandEvent& event);
 
-	void OnSearch(wxCommandEvent& event);
-	void OnSearchAscent(wxRibbonToolBarEvent& event);
-	void OnSearchDescent(wxRibbonToolBarEvent& event);
-	void OnSearchAscentUpdate(wxUpdateUIEvent& event);
-	void OnSearchDescentUpdate(wxUpdateUIEvent& event);
-	void OnSearchCycle(wxRibbonToolBarEvent& event);
-	void OnSearchCycleUpdate(wxUpdateUIEvent& event);
-	void OnSearchCaseSensitive(wxRibbonToolBarEvent& event);
-	void OnSearchCaseSensitiveUpdate(wxUpdateUIEvent& event);
-	void OnSearchEscape(wxRibbonToolBarEvent& event);
-	void OnSearchEscapeUpdate(wxUpdateUIEvent& event);
-	void OnSearchRegex(wxRibbonToolBarEvent& event);
-	void OnSearchRegexUpdate(wxUpdateUIEvent& event);
-	void OnSearchCtrlFocus(wxCommandEvent& event);
-	void OnSearchNext(wxCommandEvent& event);
-	void OnSearchPrev(wxCommandEvent& event);
+    void OnSearch(wxCommandEvent& event);
+    void OnSearchAscent(wxRibbonToolBarEvent& event);
+    void OnSearchDescent(wxRibbonToolBarEvent& event);
+    void OnSearchAscentUpdate(wxUpdateUIEvent& event);
+    void OnSearchDescentUpdate(wxUpdateUIEvent& event);
+    void OnSearchCycle(wxRibbonToolBarEvent& event);
+    void OnSearchCycleUpdate(wxUpdateUIEvent& event);
+    void OnSearchCaseSensitive(wxRibbonToolBarEvent& event);
+    void OnSearchCaseSensitiveUpdate(wxUpdateUIEvent& event);
+    void OnSearchEscape(wxRibbonToolBarEvent& event);
+    void OnSearchEscapeUpdate(wxUpdateUIEvent& event);
+    void OnSearchRegex(wxRibbonToolBarEvent& event);
+    void OnSearchRegexUpdate(wxUpdateUIEvent& event);
+    void OnSearchCtrlFocus(wxCommandEvent& event);
+    void OnSearchNext(wxCommandEvent& event);
+    void OnSearchPrev(wxCommandEvent& event);
 
-	void OnFilesExtButtonActivated(wxRibbonPanelEvent& event);
-	void OnFilesItemActivated(wxDataViewEvent& event);
+    void OnFilesExtButtonActivated(wxRibbonPanelEvent& event);
+    void OnFilesItemActivated(wxDataViewEvent& event);
 
 };
 

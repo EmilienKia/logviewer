@@ -1,7 +1,7 @@
 /* -*- Mode: C++; indent-tabs-mode: t; c-basic-offset: 4; tab-width: 4 -*-  */
 /*
  * files.cpp
- * Copyright (C) 2019 Emilien Kia <Emilien.Kia+dev@gmail.com>
+ * Copyright (C) 2019-2025 Emilien Kia <Emilien.Kia+dev@gmail.com>
  *
  * logviewer is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -25,6 +25,7 @@
 #include "files.hpp"
 
 #include "app.hpp"
+#include "helpers.hpp"
 
 #include <wx/artprov.h>
 #include <wx/bmpbuttn.h>
@@ -39,77 +40,77 @@
 //
 
 FileDialogListModel::FileDialogListModel(FileData& data) :
-	_data(data)
+    _data(data)
 {
-	data.AddListener(this);
+    data.AddListener(this);
 }
 
 FileDialogListModel::~FileDialogListModel()
 {
-	_data.RemListener(this);
+    _data.RemListener(this);
 }
 
 
 unsigned int FileDialogListModel::GetColumnCount()const
 {
-	return FileDialogListModel::COLUMN_COUNT;
+    return FileDialogListModel::COLUMN_COUNT;
 }
 
 wxString FileDialogListModel::GetColumnType(unsigned int col)const
 {
-	return "string";
+    return "string";
 }
 
 void FileDialogListModel::GetValueByRow(wxVariant &variant, unsigned int row, unsigned int col) const
 {
-	switch (col)
-	{
-	case FileDialogListModel::STATUS:
-		variant = FileDescriptor::StatusToString(GetData().GetFile(row).status);
-		return;
-	case FileDialogListModel::FILENAME:
-		variant = GetData().GetFile(row).path;
-		return;
-	case FileDialogListModel::READER:
-		variant = "<reader>";
-		return;
-	case FileDialogListModel::LAYOUT:
-		variant = "<layout>";
-		return;
-	default:
-		return;
-	}
+    switch (col)
+    {
+    case FileDialogListModel::STATUS:
+        variant = Formatter::StatusToString(GetData().GetFile(row).status);
+        return;
+    case FileDialogListModel::FILENAME:
+        variant = GetData().GetFile(row).path;
+        return;
+    case FileDialogListModel::READER:
+        variant = "<reader>";
+        return;
+    case FileDialogListModel::LAYOUT:
+        variant = "<layout>";
+        return;
+    default:
+        return;
+    }
 }
 
 bool FileDialogListModel::GetAttrByRow(unsigned int row, unsigned int col, wxDataViewItemAttr &attr)const
 {
-	return false;
+    return false;
 }
 
 bool FileDialogListModel::SetValueByRow(const wxVariant &variant, unsigned int row, unsigned int col)
 {
-	return false;
+    return false;
 }
 
 void FileDialogListModel::Update()
 {
-	long count = GetData().GetFileCount();
-	Reset(count);
+    long count = GetData().GetFileCount();
+    Reset(count);
 }
 
 void FileDialogListModel::Updated(FileData& data)
 {
-	Update();
+    Update();
 }
 
 uint16_t FileDialogListModel::GetFileId(wxDataViewItem item)const
 {
-	return GetRow(item);
+    return GetRow(item);
 }
 
 const FileDescriptor* FileDialogListModel::GetFile(wxDataViewItem item)const
 {
-	return _data.FindFile(GetFileId(item));
+    return _data.FindFile(GetFileId(item));
 }
 
 
@@ -121,57 +122,56 @@ const FileDescriptor* FileDialogListModel::GetFile(wxDataViewItem item)const
 
 
 BEGIN_EVENT_TABLE(FileOpenDialog, wxDialog)
-	EVT_UPDATE_UI(wxID_REVERT, FileOpenDialog::OnUpdateReloadFilesButton)
-	EVT_UPDATE_UI(wxID_CLOSE, FileOpenDialog::OnUpdateRemoveFilesButton)
+    EVT_UPDATE_UI(wxID_REVERT, FileOpenDialog::OnUpdateReloadFilesButton)
+    EVT_UPDATE_UI(wxID_CLOSE, FileOpenDialog::OnUpdateRemoveFilesButton)
 
-	EVT_BUTTON(wxID_OPEN, FileOpenDialog::OnOpenFilesButton)
-	EVT_BUTTON(wxID_REVERT, FileOpenDialog::OnReloadFilesButton)
-	EVT_BUTTON(wxID_CLOSE, FileOpenDialog::OnRemoveFilesButton)
+    EVT_BUTTON(wxID_OPEN, FileOpenDialog::OnOpenFilesButton)
+    EVT_BUTTON(wxID_REVERT, FileOpenDialog::OnReloadFilesButton)
+    EVT_BUTTON(wxID_CLOSE, FileOpenDialog::OnRemoveFilesButton)
 END_EVENT_TABLE()
 
 
 bool FileOpenDialog::Create(wxWindow *parent, wxWindowID id, const wxString &title, const wxPoint &pos, const wxSize &size)
 {
-	if(!wxDialog::Create(parent, id, title, pos, size, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER|wxMAXIMIZE_BOX|wxMINIMIZE_BOX)) {
-		return false;		
-	}
+    if(!wxDialog::Create(parent, id, title, pos, size, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER|wxMAXIMIZE_BOX|wxMINIMIZE_BOX)) {
+        return false;
+    }
 
-	_filesModel = new FileDialogListModel(wxGetApp().GetFileData());
+    _filesModel = new FileDialogListModel(wxGetApp().GetFileData());
 
-	wxSizer* gsz = new wxBoxSizer(wxVERTICAL);
+    wxSizer* gsz = new wxBoxSizer(wxVERTICAL);
 
-	wxSizer* tbsz = new wxBoxSizer(wxHORIZONTAL);
+    wxSizer* tbsz = new wxBoxSizer(wxHORIZONTAL);
 
-	wxButton* btn;
-	btn = new wxButton(this, wxID_OPEN, "Open files...");
-	btn->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_BUTTON));
-	tbsz->Add(btn , 0, wxALL, 4);
+    wxButton* btn;
+    btn = new wxButton(this, wxID_OPEN, "Open files...");
+    btn->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_BUTTON));
+    tbsz->Add(btn , 0, wxALL, 4);
 
-	btn = new wxButton(this, wxID_REVERT, "Reload");
-	btn->SetBitmap(wxArtProvider::GetBitmap(wxART_TICK_MARK, wxART_BUTTON));
-	tbsz->Add(btn , 0, wxALL, 4);
+    btn = new wxButton(this, wxID_REVERT, "Reload");
+    btn->SetBitmap(wxArtProvider::GetBitmap(wxART_TICK_MARK, wxART_BUTTON));
+    tbsz->Add(btn , 0, wxALL, 4);
 
-	btn = new wxButton(this, wxID_CLOSE, "Remove");
-	btn->SetBitmap(wxArtProvider::GetBitmap(wxART_CLOSE, wxART_BUTTON));
-	tbsz->Add(btn , 0, wxALL, 4);
+    btn = new wxButton(this, wxID_CLOSE, "Remove");
+    btn->SetBitmap(wxArtProvider::GetBitmap(wxART_CLOSE, wxART_BUTTON));
+    tbsz->Add(btn , 0, wxALL, 4);
 
-	gsz->Add(tbsz, 0, wxEXPAND);
+    gsz->Add(tbsz, 0, wxEXPAND);
 
-	_files = new wxDataViewCtrl(this, ID_LV_FILEBOX_FILE_DVCTRL, wxDefaultPosition, wxDefaultSize, wxDV_HORIZ_RULES);
-	_files->AppendTextColumn("Status",    FileDialogListModel::STATUS,  wxDATAVIEW_CELL_INERT, 64, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
-	_files->AppendTextColumn("File",     FileDialogListModel::FILENAME, wxDATAVIEW_CELL_INERT, 300, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE)
-		->GetRenderer()->EnableEllipsize(wxELLIPSIZE_START);
+    _files = new wxDataViewCtrl(this, ID_LV_FILEBOX_FILE_DVCTRL, wxDefaultPosition, wxDefaultSize, wxDV_HORIZ_RULES);
+    _files->AppendTextColumn("Status",    FileDialogListModel::STATUS,  wxDATAVIEW_CELL_INERT, 64, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
+    _files->AppendTextColumn("File",     FileDialogListModel::FILENAME, wxDATAVIEW_CELL_INERT, 300, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE)
+        ->GetRenderer()->EnableEllipsize(wxELLIPSIZE_START);
 //	_files->AppendTextColumn("Reader",    FileDialogListModel::READER,  wxDATAVIEW_CELL_INERT, 128, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
 //	_files->AppendTextColumn("Layout", FileDialogListModel::LAYOUT, 	wxDATAVIEW_CELL_INERT, 128, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE);
-	_files->AssociateModel(_filesModel);
-	
+    _files->AssociateModel(_filesModel);
 
-	gsz->Add(_files, 1, wxALL|wxEXPAND, 4);
+    gsz->Add(_files, 1, wxALL|wxEXPAND, 4);
 
-	gsz->Add(CreateSeparatedButtonSizer(wxOK|wxCANCEL), 0, wxALL|wxEXPAND|wxALIGN_BOTTOM, 4);
-	SetSizer(gsz);
+    gsz->Add(CreateSeparatedButtonSizer(wxOK|wxCANCEL), 0, wxALL|wxEXPAND, 4);
+    SetSizer(gsz);
 
-	_filesModel->Update();
+    _filesModel->Update();
 
     return true;
 }
@@ -179,52 +179,52 @@ bool FileOpenDialog::Create(wxWindow *parent, wxWindowID id, const wxString &tit
 
 void FileOpenDialog::OnOpenFilesButton(wxCommandEvent& event)
 {
-	wxArrayString paths;
-	int res = wxGetApp().OpenFileDialog(this, paths);
-	if(res == wxID_CANCEL)
-		return;
+    wxArrayString paths;
+    int res = wxGetApp().OpenFileDialog(this, paths);
+    if(res == wxID_CANCEL)
+        return;
 
-	wxVector<uint16_t> fids;
-	for (const wxString& path : paths)
-	{
-		fids.push_back(_filesModel->GetData().GetFile(path).id);
-	}
+    wxVector<uint16_t> fids;
+    for (const wxString& path : paths)
+    {
+        fids.push_back(_filesModel->GetData().GetFile((std::string)path).id);
+    }
 
-	_filesModel->Update();
+    _filesModel->Update();
 }
 
 void FileOpenDialog::OnReloadFilesButton(wxCommandEvent& event)
 {
-	if(_files->HasSelection())
-	{
-		FileDescriptor* fd = const_cast<FileDescriptor*>(_filesModel->GetFile(_files->GetSelection()));
-		if(fd)
-		{
-			fd->status = FileDescriptor::FILE_RELOAD;
-			_filesModel->Update();
-		}
-	}
+    if(_files->HasSelection())
+    {
+        FileDescriptor* fd = const_cast<FileDescriptor*>(_filesModel->GetFile(_files->GetSelection()));
+        if(fd)
+        {
+            fd->status = FileDescriptor::FILE_RELOAD;
+            _filesModel->Update();
+        }
+    }
 }
 
 void FileOpenDialog::OnRemoveFilesButton(wxCommandEvent& event)
 {
-	if(_files->HasSelection())
-	{
-		FileDescriptor* fd = const_cast<FileDescriptor*>(_filesModel->GetFile(_files->GetSelection()));
-		if(fd)
-		{
-			fd->status = FileDescriptor::FILE_REMOVED;
-			_filesModel->Update();
-		}
-	}	
+    if(_files->HasSelection())
+    {
+        FileDescriptor* fd = const_cast<FileDescriptor*>(_filesModel->GetFile(_files->GetSelection()));
+        if(fd)
+        {
+            fd->status = FileDescriptor::FILE_REMOVED;
+            _filesModel->Update();
+        }
+    }
 }
 
 void FileOpenDialog::OnUpdateReloadFilesButton(wxUpdateUIEvent& event)
 {
-	event.Enable(_files->HasSelection());
+    event.Enable(_files->HasSelection());
 }
 
 void FileOpenDialog::OnUpdateRemoveFilesButton(wxUpdateUIEvent& event)
 {
-	event.Enable(_files->HasSelection());
+    event.Enable(_files->HasSelection());
 }
