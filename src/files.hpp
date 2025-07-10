@@ -58,6 +58,7 @@ public:
 
     // Model helpers
     uint16_t GetFileId(wxDataViewItem item)const;
+    FileDescriptor* GetFile(wxDataViewItem item);
     const FileDescriptor* GetFile(wxDataViewItem item)const;
 
     void Update();
@@ -70,12 +71,12 @@ protected:
 
 
 
-class FileOpenDialog : public wxDialog
+class FileManagementDialog : public wxDialog
 {
     DECLARE_EVENT_TABLE()
 public:
-    FileOpenDialog() = default;
-    FileOpenDialog(wxWindow *parent, wxWindowID id, const wxString &title, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize)
+    FileManagementDialog() = default;
+    FileManagementDialog(wxWindow *parent, wxWindowID id, const wxString &title, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize)
     {
         Create(parent, id, title, pos, size);
     }
@@ -83,16 +84,38 @@ public:
     bool Create (wxWindow *parent, wxWindowID id, const wxString &title, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize);
 
 protected:
+
     wxDataViewCtrl* _files;
 
     FileDialogListModel* _filesModel;
+
+    FileDescriptor* _selectedDescriptor = nullptr;
+
+    wxChoice* _logFormatChoice;
+    wxTextCtrl* _customLogFormatText;
+    wxChoice* _dateFormatChoice;
+    wxTextCtrl* _customDateFormatText;
 
     void OnOpenFilesButton(wxCommandEvent& event);
     void OnReloadFilesButton(wxCommandEvent& event);
     void OnRemoveFilesButton(wxCommandEvent& event);
 
+    void OnFileSelectionChanged(wxDataViewEvent& event);
+    void OnLogFormatChoice(wxCommandEvent& event);
+    void OnDateFormatChoice(wxCommandEvent& event);
+    void OnCustomLogFormatChanged(wxCommandEvent& event);
+    void OnCustomDateFormatChanged(wxCommandEvent& event);
+
+    void UpdateFormatControls();
+    void SaveCurrentFormatSettings();
+    void LoadFormatSettingsFromDescriptor(const FileDescriptor& descriptor);
+
     void OnUpdateReloadFilesButton(wxUpdateUIEvent& event);
     void OnUpdateRemoveFilesButton(wxUpdateUIEvent& event);
+
+    void ValidateRegex(wxTextCtrl* textCtrl, const wxString& regex);
+    void SetRegexDecoration(wxTextCtrl* textCtrl, bool valid);
+
 };
 
 

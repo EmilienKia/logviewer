@@ -27,7 +27,7 @@
 
 wxString Formatter::StatusToString(FileDescriptor::FILE_DESC_STATUS status)
 {
-    static const wxString arr[] = {"", "New", "Reload", "Removed"};
+    static const wxString arr[] = {"", "New", "Load", "Removed"};
     return arr[status];
 }
 
@@ -46,5 +46,5 @@ wxString Formatter::FormatDate(const wxDateTime& date)
 
 wxString Formatter::FormatDate(const Timestamp& date)
 {
-    return std::format("The time of the Unix epoch was {0:%F}T{0:%R%z}.", date);
+    return std::format("{0:%F} {0:%T%z}.", date);
 }

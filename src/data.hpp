@@ -48,7 +48,8 @@ enum LogLevel
     LOG_LEVEL_COUNT
 };
 
-struct ParsedEntry {
+struct ParsedEntry
+{
     Timestamp date;
     LogLevel level = LogLevel::LOG_UNKNOWN;
     long pid = 0;
@@ -60,11 +61,37 @@ struct ParsedEntry {
     std::optional<std::string> extra;
 };
 
+class DataSource
+{
+public:
+    virtual ~DataSource() = default;
+
+    virtual std::string_view GetName() const = 0;
+    virtual std::string_view GetData() const = 0;
+
+    virtual void Load() =0;
+};
+
+class FileDataSource : public DataSource
+{
+protected:
+    std::string _path;
+    std::string _data;
+public:
+    FileDataSource(const std::string& path) : _path(path) {}
+
+    std::string_view GetName() const override;
+    std::string_view GetData() const override;
+
+    void Load() override;
+};
+
+
 struct FileDescriptor
 {
-    FileDescriptor(): id(0), path() {}
+    FileDescriptor(): id(0) {}
 
-    FileDescriptor(uint16_t id, const std::string& path): id(id), path(path) {}
+    FileDescriptor(uint16_t id, std::shared_ptr<DataSource> source): id(id), source(source) {}
     FileDescriptor(const FileDescriptor& fd) = default;
     FileDescriptor(FileDescriptor&& fd) = default;
 
@@ -72,13 +99,28 @@ struct FileDescriptor
     FileDescriptor& operator=(FileDescriptor&&) = default;
 
     uint16_t id;
-    std::string path;
+    std::shared_ptr<DataSource> source;
+
+    enum LOG_FORMAT {
+        LOG_FORMAT_SPRING_BOOT, // Spring Boot format
+        LOG_FORMAT_LOG4J, // Log4J format
+        LOG_FORMAT_CUSTOM, // Custom format
+        LOG_FORMAT_DEFAULT = LOG_FORMAT_SPRING_BOOT
+    } logFormat = LOG_FORMAT_DEFAULT;
+    std::string logRegex;
+
+    enum LOG_DATE {
+        DATE_FORMAT_FULL_ISO8601, // Full ISO 8601 format
+        DATE_FORMAT_CUSTOM,
+        DATE_FORMAT_DEFAULT = DATE_FORMAT_FULL_ISO8601,
+    } dateFormat = DATE_FORMAT_DEFAULT;
+    std::string dateRegex;
 
     enum FILE_DESC_STATUS
     {
         FILE_LOADED,	// The file has already been loaded
         FILE_NEW,		// The file is new, never loaded
-        FILE_RELOAD,	// The file is to reload, have already been loaded.
+        FILE_RELOAD,	// The file is to Load, have already been loaded.
         FILE_REMOVED	// The file will be removed
     } status = FILE_NEW;
 
@@ -105,20 +147,22 @@ private:
 
 public:
     FileData() = default;
+    FileData(const FileData&) = default;
 
-    uint16_t AddFile(const std::string& path);
+    FileDescriptor& AddFile(const std::string& path);
+    FileDescriptor& AddSource(std::shared_ptr<DataSource> source);
 
-    size_t GetFileCount()const {return _fileDescriptors.size();}
-    FileDescriptor& GetFile(const std::string& file);
+    size_t GetSourceCount()const {return _fileDescriptors.size();}
 
-    FileDescriptor& GetFile(uint16_t id);
-    const FileDescriptor& GetFile(uint16_t id)const;
+    FileDescriptor& GetSource(uint16_t id);
+    const FileDescriptor& GetSource(uint16_t id)const;
 
-    const FileDescriptor* FindFile(const std::string& file)const;
-    const FileDescriptor* FindFile(uint16_t id)const;
+    const FileDescriptor* FindSource(const std::string& name)const;
+    FileDescriptor* FindSource(uint16_t id);
+    const FileDescriptor* FindSource(uint16_t id)const;
 
-    long GetFileEntryCount(uint16_t fileid) const {return GetFile(fileid).entryCount; }
-    long GetFileLogLevelEntryCount(uint16_t fileid, LogLevel criticality) const {return GetFile(fileid).levelCounts[criticality]; }
+    long GetSourceEntryCount(uint16_t fileid) const {return GetSource(fileid).entryCount; }
+    long GetSourceLogLevelEntryCount(uint16_t fileid, LogLevel criticality) const {return GetSource(fileid).levelCounts[criticality]; }
 
     iterator begin() {return _fileDescriptors.begin();}
     const_iterator begin()const {return _fileDescriptors.begin();}
@@ -126,7 +170,7 @@ public:
     const_iterator end()const {return _fileDescriptors.end();}
 
     template<typename Pred>
-    void RemoveFileIf(Pred pred) {
+    void RemoveSourceIf(Pred pred) {
         _fileDescriptors.erase(std::remove_if(_fileDescriptors.begin(), _fileDescriptors.end(), pred), _fileDescriptors.end());
     }
 

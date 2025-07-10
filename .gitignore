@@ -57,5 +57,9 @@ Profiling/
 Optimized/
 Release/
 
+# CMake build files
+CMakeCache.txt
+cmake-build*/
+
 # Other backup schemes
 **~

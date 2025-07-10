@@ -268,31 +268,31 @@ void FileListModel::GetValueByRow(wxVariant &variant, unsigned int row, unsigned
         variant = GetData().IsFileShown(row);
         return;
     case FileListModel::FILENAME:
-        variant = GetData().GetFileData().GetFile(row).path;
+        variant = std::string(GetData().GetFileData().GetSource(row).source->GetName());
         return;
     case FileListModel::COUNT:
-        variant = wxFormatCount(GetData().GetFileData().GetFileEntryCount(row));
+        variant = wxFormatCount(GetData().GetFileData().GetSourceEntryCount(row));
         return;
     case FileListModel::CRIT_FATAL:
-        variant = wxFormatCount(GetData().GetFileData().GetFileLogLevelEntryCount(row, LOG_FATAL));
+        variant = wxFormatCount(GetData().GetFileData().GetSourceLogLevelEntryCount(row, LOG_FATAL));
         return;
     case FileListModel::CRIT_CRITICAL:
-        variant = wxFormatCount(GetData().GetFileData().GetFileLogLevelEntryCount(row, LOG_CRITICAL));
+        variant = wxFormatCount(GetData().GetFileData().GetSourceLogLevelEntryCount(row, LOG_CRITICAL));
         return;
     case FileListModel::CRIT_ERROR:
-        variant = wxFormatCount(GetData().GetFileData().GetFileLogLevelEntryCount(row, LOG_ERROR));
+        variant = wxFormatCount(GetData().GetFileData().GetSourceLogLevelEntryCount(row, LOG_ERROR));
         return;
     case FileListModel::CRIT_WARNING:
-        variant = wxFormatCount(GetData().GetFileData().GetFileLogLevelEntryCount(row, LOG_WARNING));
+        variant = wxFormatCount(GetData().GetFileData().GetSourceLogLevelEntryCount(row, LOG_WARNING));
         return;
     case FileListModel::CRIT_INFO:
-        variant = wxFormatCount(GetData().GetFileData().GetFileLogLevelEntryCount(row, LOG_INFO));
+        variant = wxFormatCount(GetData().GetFileData().GetSourceLogLevelEntryCount(row, LOG_INFO));
         return;
     case FileListModel::CRIT_DEBUG:
-        variant = wxFormatCount(GetData().GetFileData().GetFileLogLevelEntryCount(row, LOG_DEBUG));
+        variant = wxFormatCount(GetData().GetFileData().GetSourceLogLevelEntryCount(row, LOG_DEBUG));
         return;
     case FileListModel::CRIT_TRACE:
-        variant = wxFormatCount(GetData().GetFileData().GetFileLogLevelEntryCount(row, LOG_TRACE));
+        variant = wxFormatCount(GetData().GetFileData().GetSourceLogLevelEntryCount(row, LOG_TRACE));
         return;
     default:
         return;
@@ -316,7 +316,7 @@ bool FileListModel::SetValueByRow(const wxVariant &variant, unsigned int row, un
 
 void FileListModel::Update()
 {
-    long count = GetData().GetFileData().GetFileCount();
+    long count = GetData().GetFileData().GetSourceCount();
     Reset(count);
 }
 

@@ -105,7 +105,7 @@ void LogViewerApp::OnOpen(wxCommandEvent& event)
 
     for (const wxString& path : paths)
     {
-        GetFileData().GetFile((std::string)path);
+        GetFileData().AddFile((std::string) path);
     }
 
     FileManagement();
@@ -140,7 +140,7 @@ void LogViewerApp::OpenFiles(const wxArrayString& files)
 {
     for (const wxString& path : files)
     {
-        GetFileData().GetFile((std::string)path);
+        GetFileData().AddFile((std::string) path);
     }
 
     FileManagement();
@@ -149,7 +149,7 @@ void LogViewerApp::OpenFiles(const wxArrayString& files)
 
 void LogViewerApp::FileManagement()
 {
-    FileOpenDialog fd(_frame, wxID_ANY, _("Manage log files"));
+    FileManagementDialog fd(_frame, wxID_ANY, _("Manage log files"));
     if(fd.ShowModal() == wxID_OK)
         ApplyUpdates();
     else
@@ -170,8 +170,8 @@ void LogViewerApp::ApplyUpdates()
         });
 
     // Second: Effectively remove files
-    GetFileData().RemoveFileIf([&](FileDescriptor& entry){
-            return entry.status==FileDescriptor::FILE_REMOVED;
+    GetFileData().RemoveSourceIf([&](FileDescriptor &entry) {
+        return entry.status == FileDescriptor::FILE_REMOVED;
     });
 
     // Third: Load logs from new and reloaded files
@@ -194,8 +194,8 @@ void LogViewerApp::ApplyUpdates()
 void LogViewerApp::CancelUpdates()
 {
     // First: Remove new files
-    GetFileData().RemoveFileIf([&](FileDescriptor& entry){
-            return entry.status==FileDescriptor::FILE_NEW;
+    GetFileData().RemoveSourceIf([&](FileDescriptor &entry) {
+        return entry.status == FileDescriptor::FILE_NEW;
     });
 
     // Second: Mark removed and reloaded files to loaded.

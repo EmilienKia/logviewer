@@ -20,8 +20,6 @@
 #include <stdexcept>
 #include <charconv>
 #include <regex>
-#include <iomanip>
-#include <sstream>
 #include <ctime>
 
 #define PCRE2_CODE_UNIT_WIDTH 8
@@ -65,16 +63,17 @@ public:
             pcre2_match_data_free(match_data);
             return std::nullopt;
         }
-
         MatchResult result;
         PCRE2_SIZE* ovector = pcre2_get_ovector_pointer(match_data);
         for (uint32_t i = 0; i < name_count_; ++i) {
             PCRE2_SPTR entry = name_table_ + i * name_entry_size_;
             uint16_t group_index = (entry[0] << 8) | entry[1];
-            std::string name((char*)entry + 2);
+            std::string name((char *) entry + 2);
             PCRE2_SIZE start = ovector[2 * group_index];
             PCRE2_SIZE end = ovector[2 * group_index + 1];
-            result.named[name] = input.substr(start, end - start);
+            if (start != PCRE2_UNSET && end != PCRE2_UNSET) {
+                result.named[name] = input.substr(start, end - start);
+            }
         }
 
         pcre2_match_data_free(match_data);
@@ -100,17 +99,51 @@ const std::string Regex::SpringBoot = R"((?<date>\S+)\s+)"
                                 R"((?<level>[\w]+)?\s*)"
                                 R"((?<pid>\d+)?\s*---\s*)"
                                 R"((\[(?<thread>[^\]]*)\])\s*)"
-//                                R"((\[(?<reason>[^\]]*)\])?\s*)"
+                                R"((\[(?<reason>[^\]]*)\])?\s*)"
                                 R"((?<logger>[^: ]*)\s*:\s*)"
                                 R"((?<message>.*))";
 
-//R"(   (?<date>\S+)    \s+   (?<level>[\w]+)?   \s+   (?<pid>\d+)?   \s*---\s*    (\[(?<thread>[^\]]*)\])?    \s*    (?<logger>[^: ]*)    \s*:\s*    (?<message>.*))"
+const std::string Regex::Log4J2 = R"((?<date>\d{2}:\d{2}:\d{2}\.\d{3}) )"
+                                  R"(\[(?<thread>[^\]]+)\] )"
+                                  R"((?<level>\w{4,5}) +)"
+                                  R"((?<logger>[\w.$]+) - (?<message>.*))";
+
+
+
+//
+// Log formats
+//
+
+
+
+const std::vector<LogFormatDefinition> LogFormat::LOG_FORMAT_DEFINITIONS = {
+        {FileDescriptor::LOG_FORMAT_SPRING_BOOT, "Default Spring Boot log format", false, /*Regex::SpringBoot*/ R"((?<date>\S+)\s+)"
+                                                                                                                   R"((?<level>[\w]+)?\s*)"
+                                                                                                                   R"((?<pid>\d+)?\s*---\s*)"
+                                                                                                                   R"((\[(?<thread>[^\]]*)\])\s*)"
+                                                                                                                   R"((\[(?<reason>[^\]]*)\])?\s*)"
+                                                                                                                   R"((?<logger>[^: ]*)\s*:\s*)"
+                                                                                                                   R"((?<message>.*))"},
+        {FileDescriptor::LOG_FORMAT_LOG4J, "Default Log4J format", false, /*Regex::Log4J2*/ R"((?<date>\d{2}:\d{2}:\d{2}\.\d{3}) )"
+                                                                                               R"(\[(?<thread>[^\]]+)\] )"
+                                                                                               R"((?<level>\w{4,5}) +)"
+                                                                                               R"((?<logger>[\w.$]+) - (?<message>.*))"},
+        {FileDescriptor::LOG_FORMAT_CUSTOM, "Custom format", true, ""}
+};
+
+const std::vector<DateFormatDefinition> LogFormat::DATE_FORMAT_DEFINITIONS = {
+        {FileDescriptor::DATE_FORMAT_FULL_ISO8601, "Full ISO 8601 format", false, "<!-- REGEX_ISO8601_FORMAT -->"},
+        {FileDescriptor::DATE_FORMAT_CUSTOM, "Custom format", true, ""}
+};
+
+
+
 
 //
 // Log parser
 //
 
-void Parser::ParseLogFiles(const std::vector<std::string>& paths)
+/*void Parser::ParseLogFiles(const std::vector<std::string>& paths)
 {
     for (auto path : paths)
     {
@@ -129,41 +162,21 @@ void Parser::ParseLogFile(const std::string& path)
         std::cerr << "Cannot open file " << path << std::endl;
         return;
     }
-    Parse(_files.GetFile(path));
-}
+    Parse(_files.GetSource(path));
+}*/
 
 void Parser::Parse(FileDescriptor& fd)
 {
-    std::ifstream file(fd.path);
-    if (!file.is_open() && !file.good())
-    {
-        // TODO Log error
-        std::cerr << "Cannot open file " << fd.path << std::endl;
-        return;
-    }
-/*
-    _fileDesc = &fd;
+    fd.source->Load();
 
-    _tempExtra.clear();
+    if(fd.source->GetData().size() > 0) {
+        std::string logRegex = fd.logFormat != FileDescriptor::LOG_FORMAT_CUSTOM
+                               ? LogFormat::LOG_FORMAT_DEFINITIONS[fd.logFormat].defaultRegex : fd.logRegex;
 
-    while (!file.eof())
-    {
-        std::string line;
-        std::getline(file, line);
-        if (line.empty() && file.eof()) {
-            break;
+        std::vector<ParsedEntry> entries = ParseLogs(fd.source->GetData(), Regex::createRegex(Regex::SpringBoot));
+        for (const auto &entry: entries) {
+            _data.AddLog(fd.id, entry);
         }
-        ParseLogLine(line);
-    }
-    AppendExtraLine();
-
-    _fileDesc = nullptr;
-*/
-
-    std::string file_content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::vector<ParsedEntry> entries = ParseLogs(file_content, Regex::createRegex(Regex::SpringBoot));
-    for (const auto& entry : entries) {
-        _data.AddLog(fd.id, entry);
     }
 }
 
@@ -357,13 +370,13 @@ std::string Parser::Trim(const std::string& str)
 
 LogLevel Parser::ParseLogLevel(const std::string_view& str)
 {
-    if (str.starts_with('T') /*== "TRACE"*/) return LogLevel::LOG_TRACE;
-    if (str.starts_with('D') /*== "DEBUG"*/) return LogLevel::LOG_DEBUG;
-    if (str.starts_with('I')/* == "INFO"*/) return LogLevel::LOG_INFO;
-    if (str.starts_with('W')/* == "WARN"*/) return LogLevel::LOG_WARNING;
-    if (str.starts_with('E')/* == "ERROR"*/) return LogLevel::LOG_ERROR;
-    if (str.starts_with('C')/* == "CRITICAL"*/) return LogLevel::LOG_CRITICAL;
-    if (str.starts_with('F')/* == "FATAL"*/) return LogLevel::LOG_FATAL;
+    if (str.starts_with('T') || str.starts_with('t') /*== "TRACE"*/) return LogLevel::LOG_TRACE;
+    if (str.starts_with('D') || str.starts_with('d') /*== "DEBUG"*/) return LogLevel::LOG_DEBUG;
+    if (str.starts_with('I') || str.starts_with('i') /* == "INFO"*/) return LogLevel::LOG_INFO;
+    if (str.starts_with('W') || str.starts_with('w') /* == "WARN"*/) return LogLevel::LOG_WARNING;
+    if (str.starts_with('E') || str.starts_with('e') /* == "ERROR"*/) return LogLevel::LOG_ERROR;
+    if (str.starts_with('C') || str.starts_with('c') /* == "CRITICAL"*/) return LogLevel::LOG_CRITICAL;
+    if (str.starts_with('F') || str.starts_with('f') /* == "FATAL"*/) return LogLevel::LOG_FATAL;
     return LogLevel::LOG_UNKNOWN;
 }
 

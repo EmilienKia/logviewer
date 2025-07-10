@@ -39,10 +39,31 @@ public:
     virtual std::optional<MatchResult> match(std::string_view input) const = 0;
 
     static const std::string SpringBoot;
+    static const std::string Log4J2;
     static std::unique_ptr<Regex> createRegex(const std::string& pattern);
 };
 
 
+
+
+struct LogFormatDefinition {
+    FileDescriptor::LOG_FORMAT enumValue;
+    std::string displayName;
+    bool isEditable;
+    std::string defaultRegex;
+};
+
+struct DateFormatDefinition {
+    FileDescriptor::LOG_DATE enumValue;
+    std::string displayName;
+    bool isEditable;
+    std::string defaultRegex;
+};
+
+struct LogFormat {
+    static const std::vector<LogFormatDefinition> LOG_FORMAT_DEFINITIONS;
+    static const std::vector<DateFormatDefinition> DATE_FORMAT_DEFINITIONS;
+};
 
 
 class Parser
@@ -53,7 +74,7 @@ protected:
 
     std::string _tempExtra;
 
-    FileDescriptor* _fileDesc;
+    FileDescriptor* _fileDesc = nullptr;
 
     void ParseLogLine(const std::string& line);
 
@@ -65,8 +86,10 @@ protected:
 public:
     Parser(LogData& data, FileData& files) :_data(data), _files(files) {}
 
+/*
     void ParseLogFiles(const std::vector<std::string>& paths);
     void ParseLogFile(const std::string& path);
+*/
 
     void Parse(FileDescriptor& fd);
 

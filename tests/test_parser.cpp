@@ -8,7 +8,7 @@ TEST_CASE("Simple log parsing") {
             Regex::SpringBoot
     );
 
-    std::string log = "2025-07-06T12:34:56.789 INFO 12345 --- [main] com.example.Demo : Started DemoApplication";
+    std::string log = "2025-07-06T12:34:56.789 INFO 12345 --- [main] [  restartedMain] com.example.Demo : Started DemoApplication";
 
     auto parsed = Parser::ParseLogs(log, regex);
 
@@ -18,12 +18,10 @@ TEST_CASE("Simple log parsing") {
     CHECK(parsed[0].thread == "main");
     CHECK(parsed[0].logger == "com.example.Demo");
     CHECK(parsed[0].message == "Started DemoApplication");
-
-
 }
 
 
-TEST_CASE("Log parsing", "[parser]") {
+TEST_CASE("SpringBoot log parsing", "[parser][springboot]") {
     std::shared_ptr<Regex> regex = Regex::createRegex(Regex::SpringBoot);
 
     SECTION("Spring Boot log - single well-formed line", "[logparser][springboot]") {
@@ -97,10 +95,29 @@ TEST_CASE("Log parsing", "[parser]") {
         CHECK(parsed[1].logger == "com.example.Job");
     }
 
-
-
 }
 
+TEST_CASE("Parse Log4j2 formatted log", "[parser][log4j2]") {
+    std::shared_ptr<Regex> regex = Regex::createRegex(Regex::Log4J2);
+
+    std::string_view log =
+            "12:34:56.789 [main] INFO  com.example.MyClass - Application started\n"
+            "12:34:57.001 [main] ERROR com.example.MyClass - Something failed\n"
+            "Stack trace follows:\n"
+            "java.lang.Exception: Dummy\n";
+
+    auto entries = Parser::ParseLogs(log, regex);
+
+    REQUIRE(entries.size() == 2);
+    REQUIRE(entries[0].level == LOG_INFO);
+    REQUIRE(entries[0].thread == "main");
+    REQUIRE(entries[0].logger == "com.example.MyClass");
+    REQUIRE(entries[0].message == "Application started");
+
+    REQUIRE(entries[1].level == LOG_ERROR);
+    REQUIRE(entries[1].message.starts_with("Something failed"));
+    REQUIRE(entries[1].message.find("Dummy") == std::string_view::npos);
+}
 
 
 

@@ -20,53 +20,77 @@
 #include "data.hpp"
 
 #include <algorithm>
+#include <fstream>
 
 //
-// File Descriptor
+// File Data source
 //
+std::string_view FileDataSource::GetName() const
+{
+    return _path;
+}
+
+std::string_view FileDataSource::GetData() const
+{
+    return _data;
+}
+
+void FileDataSource::Load() {
+    std::ifstream file(_path);
+    if (file) {
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        _data = buffer.str();
+    } else {
+        _data.clear();
+    }
+}
 
 //
 // FileData
 //
 
-uint16_t FileData::AddFile(const std::string& path)
-{
-    // TODO Implement it
-    return 0;
+FileDescriptor& FileData::AddFile(const std::string& path) {
+    return AddSource(std::make_shared<FileDataSource>(path));
 }
 
-FileDescriptor& FileData::GetFile(const std::string& file)
+FileDescriptor& FileData::AddSource(std::shared_ptr<DataSource> source)
 {
-    for(auto& fd : _fileDescriptors) {
-        if(fd.path == file) {
-            return fd;
-        }
-    }
-    _fileDescriptors.emplace_back(_fileDescriptors.size(), file);
+    _fileDescriptors.emplace_back(_fileDescriptors.size(), source);
     return _fileDescriptors.back();
 }
 
-FileDescriptor& FileData::GetFile(uint16_t id)
+FileDescriptor& FileData::GetSource(uint16_t id)
 {
     return _fileDescriptors[id];
 }
 
-const FileDescriptor& FileData::GetFile(uint16_t id)const 
+const FileDescriptor& FileData::GetSource(uint16_t id)const
 {
     return _fileDescriptors[id];
 }
 
-const FileDescriptor* FileData::FindFile(const std::string& file)const
+const FileDescriptor* FileData::FindSource(const std::string& name)const
 {
     for(const FileDescriptor& fd : _fileDescriptors) {
-        if(fd.path == file) {
+        if(fd.source->GetName() == name) {
             return &fd;
         }
     }
     return nullptr;
 }
 
-const FileDescriptor* FileData::FindFile(uint16_t id)const
+FileDescriptor* FileData::FindSource(uint16_t id)
+{
+    for(FileDescriptor& fd : _fileDescriptors) {
+        if(fd.id == id) {
+            return &fd;
+        }
+    }
+    return nullptr;
+}
+
+const FileDescriptor* FileData::FindSource(uint16_t id)const
 {
     for(const FileDescriptor& fd : _fileDescriptors) {
         if(fd.id == id) {
@@ -215,7 +239,7 @@ void LogData::UpdateStatistics()
         _levelCounts[entry.level]++;
         _levelLoggerCounts[entry.logger][entry.level]++;
 
-        FileDescriptor& fd = GetFileData().GetFile(entry.file);
+        FileDescriptor& fd = GetFileData().GetSource(entry.file);
         fd.entryCount++;
         fd.levelCounts[entry.level]++;
 
@@ -290,10 +314,10 @@ void FilteredLogData::Update()
         _shownLoggers.resize(GetLogData().GetLoggerCount(), true);
     }
 
-    if(_shownFiles.size() != GetFileData().GetFileCount()) {
+    if(_shownFiles.size() != GetFileData().GetSourceCount()) {
         // If file count doesnt match, reactivate alls.
         _shownFiles.clear();
-        _shownFiles.resize(GetFileData().GetFileCount(), true);
+        _shownFiles.resize(GetFileData().GetSourceCount(), true);
     }
 
     _data.clear();
@@ -439,7 +463,7 @@ void FilteredLogData::DisplayAllFiles()
 {
     // TODO optimize it
     _shownFiles.clear();
-    _shownFiles.resize(GetFileData().GetFileCount(), true);
+    _shownFiles.resize(GetFileData().GetSourceCount(), true);
     Update();
 }
 
@@ -447,20 +471,20 @@ void FilteredLogData::HideAllFiles()
 {
     // TODO optimize it
     _shownFiles.clear();
-    _shownFiles.resize(GetFileData().GetFileCount(), false);
+    _shownFiles.resize(GetFileData().GetSourceCount(), false);
     Update();
 }
 
 void FilteredLogData::DisplayFile(const std::string& file, bool display)
 {
-    const FileDescriptor* fd = GetFileData().FindFile(file);
+    const FileDescriptor* fd = GetFileData().FindSource(file);
     if(fd!=nullptr)
         DisplayFile(fd->id, display);
 }
 
 void FilteredLogData::DisplayFile(uint16_t file, bool display)
 {
-    if (file < GetFileData().GetFileCount()
+    if (file < GetFileData().GetSourceCount()
         && _shownFiles.size() > file) // TODO Review it (shall be implied)
     {
         _shownFiles[file] = display;
@@ -471,7 +495,7 @@ void FilteredLogData::DisplayFile(uint16_t file, bool display)
 
 void FilteredLogData::ToggleFile(uint16_t file)
 {
-    if (file < GetFileData().GetFileCount()
+    if (file < GetFileData().GetSourceCount()
         && _shownFiles.size() > file) // TODO Review it (shall be implied)
     {
         _shownFiles[file] = !_shownFiles[file];
@@ -481,7 +505,7 @@ void FilteredLogData::ToggleFile(uint16_t file)
 
 bool FilteredLogData::IsFileShown(const std::string& file)const
 {
-    const FileDescriptor* fd = GetFileData().FindFile(file);
+    const FileDescriptor* fd = GetFileData().FindSource(file);
     return fd!=nullptr ?  IsFileShown(fd->id) : false;
 }
 
