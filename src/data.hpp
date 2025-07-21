@@ -116,11 +116,30 @@ struct FileDescriptor
     } dateFormat = DATE_FORMAT_DEFAULT;
     std::string dateRegex;
 
+    void copyFormatFrom(const FileDescriptor& fd) {
+        if(logFormat != fd.logFormat) {
+            logFormat = fd.logFormat;
+            status = FILE_RELOAD;
+        }
+        if(logRegex != fd.logRegex) {
+            logRegex = fd.logRegex;
+            status = FILE_RELOAD;
+        }
+        if(dateFormat != fd.dateFormat) {
+            dateFormat = fd.dateFormat;
+            status = FILE_RELOAD;
+        }
+        if(dateRegex != fd.dateRegex) {
+            dateRegex = fd.dateRegex;
+            status = FILE_RELOAD;
+        }
+    }
+
     enum FILE_DESC_STATUS
     {
-        FILE_LOADED,	// The file has already been loaded
         FILE_NEW,		// The file is new, never loaded
-        FILE_RELOAD,	// The file is to Load, have already been loaded.
+        FILE_LOADED,	// The file has already been loaded
+        FILE_RELOAD,	// The file is to Load again.
         FILE_REMOVED	// The file will be removed
     } status = FILE_NEW;
 
@@ -151,6 +170,7 @@ public:
 
     FileDescriptor& AddFile(const std::string& path);
     FileDescriptor& AddSource(std::shared_ptr<DataSource> source);
+    FileDescriptor& AddDescriptor(const FileDescriptor& desc);
 
     size_t GetSourceCount()const {return _fileDescriptors.size();}
 

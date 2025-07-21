@@ -101,7 +101,9 @@ public:
     void FileManagement();
 
 protected:
-    virtual bool OnInit();
+    bool OnInit() override;
+
+    void ApplyUpdates(const FileData& data);
 
     void ApplyUpdates();
 

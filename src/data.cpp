@@ -60,6 +60,15 @@ FileDescriptor& FileData::AddSource(std::shared_ptr<DataSource> source)
     return _fileDescriptors.back();
 }
 
+FileDescriptor& FileData::AddDescriptor(const FileDescriptor& desc)
+{
+    _fileDescriptors.emplace_back(desc);
+    FileDescriptor& res = _fileDescriptors.back();
+    res.id = _fileDescriptors.size() - 1;
+    return res;
+}
+
+
 FileDescriptor& FileData::GetSource(uint16_t id)
 {
     return _fileDescriptors[id];

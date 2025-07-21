@@ -40,10 +40,10 @@
 // File Dialog List Model
 //
 
-FileDialogListModel::FileDialogListModel(FileData& data) :
+FileDialogListModel::FileDialogListModel(const FileData& data) :
     _data(data)
 {
-    data.AddListener(this);
+    _data.AddListener(this);
 }
 
 FileDialogListModel::~FileDialogListModel()
@@ -95,7 +95,7 @@ bool FileDialogListModel::SetValueByRow(const wxVariant &variant, unsigned int r
 
 void FileDialogListModel::Update()
 {
-    long count = GetData().GetSourceCount();
+    size_t count = GetData().GetSourceCount();
     Reset(count);
 }
 
@@ -165,7 +165,7 @@ bool FileManagementDialog::Create(wxWindow *parent, wxWindowID id, const wxStrin
     btn->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_BUTTON));
     tbsz->Add(btn , 0, wxALL, 4);
 
-    btn = new wxButton(this, wxID_REVERT, "Load");
+    btn = new wxButton(this, wxID_REVERT, "Reload");
     btn->SetBitmap(wxArtProvider::GetBitmap(wxART_TICK_MARK, wxART_BUTTON));
     tbsz->Add(btn , 0, wxALL, 4);
 

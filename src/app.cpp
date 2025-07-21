@@ -151,9 +151,30 @@ void LogViewerApp::FileManagement()
 {
     FileManagementDialog fd(_frame, wxID_ANY, _("Manage log files"));
     if(fd.ShowModal() == wxID_OK)
-        ApplyUpdates();
+        ApplyUpdates(fd.GetFileData());
     else
         CancelUpdates();
+}
+
+void LogViewerApp::ApplyUpdates(const FileData& data)
+{
+    // Tag changes to files
+    for(const FileDescriptor& fd : data) {
+        switch(fd.status) {
+        case FileDescriptor::FILE_NEW:
+            _files.AddDescriptor(fd);
+            break;
+        case FileDescriptor::FILE_REMOVED:
+            _files.GetSource(fd.id).status = FileDescriptor::FILE_REMOVED;
+                break;
+        case FileDescriptor::FILE_RELOAD:
+            _files.GetSource(fd.id).status = FileDescriptor::FILE_RELOAD;
+            case FileDescriptor::FILE_LOADED:
+            _files.GetSource(fd.id).copyFormatFrom(fd);
+            break;break;
+        }
+    }
+    ApplyUpdates();
 }
 
 void LogViewerApp::ApplyUpdates()

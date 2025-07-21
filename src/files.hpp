@@ -31,7 +31,7 @@
 class FileDialogListModel : public wxDataViewVirtualListModel, protected FileData::Listener
 {
 public:
-    FileDialogListModel(FileData& data);
+    FileDialogListModel(const FileData& data);
     ~FileDialogListModel();
 
     const FileData& GetData() const { return _data; }
@@ -66,7 +66,7 @@ public:
 protected:
     virtual void Updated(FileData& data) override;
 
-    FileData& _data;
+    FileData _data;
 };
 
 
@@ -82,6 +82,8 @@ public:
     }
 
     bool Create (wxWindow *parent, wxWindowID id, const wxString &title, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize);
+
+    FileData& GetFileData() { return _filesModel->GetData(); }
 
 protected:
 
