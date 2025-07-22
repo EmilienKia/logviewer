@@ -19,6 +19,7 @@ set(SRCS
         src/model.cpp
         src/parser.cpp
         src/embedartprov.cpp
+        src/modernribbonartprov.cpp
         )
 
 set(HEADERS
@@ -31,6 +32,7 @@ set(HEADERS
         src/model.hpp
         src/parser.hpp
         src/embedartprov.hpp
+        src/modernribbonartprov.hpp
         )
 
 set(wxWidgets_CONFIGURATION gtku)

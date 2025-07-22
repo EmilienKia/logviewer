@@ -39,6 +39,7 @@
 
 #include "frame.hpp"
 #include "helpers.hpp"
+#include "modernribbonartprov.hpp"
 
 
 static inline wxBitmap wxArtIcon(const wxArtID &id, unsigned int sz)
@@ -183,12 +184,27 @@ void Frame::init()
     // Ribbon bar init
     {
         _ribbon = new wxRibbonBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize,
-                                 wxRIBBON_BAR_FLOW_HORIZONTAL
-                                | wxRIBBON_BAR_SHOW_PAGE_LABELS
-                                | wxRIBBON_BAR_SHOW_PANEL_EXT_BUTTONS
-                                //| wxRIBBON_BAR_SHOW_TOGGLE_BUTTON
-                                //| wxRIBBON_BAR_SHOW_HELP_BUTTON
-                                );
+                                  wxRIBBON_BAR_FLOW_HORIZONTAL
+                                  | wxRIBBON_BAR_SHOW_PAGE_LABELS
+                                  | wxRIBBON_BAR_SHOW_PANEL_EXT_BUTTONS
+                //| wxRIBBON_BAR_SHOW_TOGGLE_BUTTON
+                //| wxRIBBON_BAR_SHOW_HELP_BUTTON
+        );
+
+
+        MyModernRibbonArtProvider *prov = new MyModernRibbonArtProvider();
+
+        prov->SetColourScheme(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW) ,
+                              wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWFRAME),
+                              *wxBLUE);
+
+        _ribbon->SetArtProvider(prov);
+
+/*
+        wxRibbonMSWArtProvider *prov = new wxRibbonMSWArtProvider();
+        _ribbon->SetArtProvider(prov);
+*/
+
 
         {
             wxRibbonPage* page = new wxRibbonPage(_ribbon, wxID_ANY, "LogViewer");
@@ -208,6 +224,7 @@ void Frame::init()
                 szr->Add(_criticalitySlider, 1, wxEXPAND|wxALL, 2);
                 szr->Add(_criticalityText, 1, wxEXPAND|wxALL, 2);
                 panel->SetSizer(szr);
+                panel->SetMinSize(wxSize(128, 32));
             }
             {
                 wxRibbonPanel *panel = new wxRibbonPanel(page, wxID_ANY, "Time frame", wxNullBitmap, wxDefaultPosition, wxDefaultSize, wxRIBBON_PANEL_NO_AUTO_MINIMISE|wxRIBBON_PANEL_MINIMISE_BUTTON);
@@ -234,7 +251,7 @@ void Frame::init()
             {
                 wxRibbonPanel* panel = new wxRibbonPanel(page, ID_LV_SEARCH_PANEL, "Search", wxNullBitmap, wxDefaultPosition, wxDefaultSize, wxRIBBON_PANEL_STRETCH);
                 _search = new wxSearchCtrl(panel, ID_LV_SEARCH_CTRL, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
-                _search->SetMinSize(wxSize(96, -1));
+                _search->SetMinSize(wxSize(128, -1));
                 wxSizer* sz = new wxBoxSizer(wxVERTICAL);
                 sz->Add(_search, 0, wxEXPAND|wxALL, 2);
 
@@ -248,12 +265,26 @@ void Frame::init()
                 tbar->AddToggleTool(ID_LV_SEARCH_ESCAPE, wxRibbonToolBmp("search-escape"), "Escape backslash (\\t...)");
                 tbar->AddToggleTool(ID_LV_SEARCH_REGEX, wxRibbonToolBmp("search-regex"), "Find regex");
 
-                sz->Add(tbar, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 2);
+                sz->Add(tbar, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 4);
                 panel->SetSizer(sz);
+                panel->SetMinSize(wxSize(128, 32));
             }
         }
+#if 1
+        {
+            wxRibbonPage* page = new wxRibbonPage(_ribbon, wxID_ANY, "LogViewer");
+            {
+                wxRibbonPanel* panel = new wxRibbonPanel(page, ID_LV_FILES_PANEL, "Files", wxNullBitmap, wxDefaultPosition, wxDefaultSize, wxRIBBON_PANEL_EXT_BUTTON);
+                wxRibbonButtonBar* bar = new wxRibbonButtonBar(panel, wxID_ANY);
+                bar->AddButton(wxID_OPEN, "Open", wxRibbonBmp("document-open"));
+                bar->AddButton(ID_LV_FILE_MANAGE, "Manage", wxRibbonBmp("document-manage"));
+                bar->AddButton(wxID_CLEAR, "Clear", wxRibbonBmp("document-clear"));
+            }
+        }
+#endif
+        _ribbon->ShowPage(0);
         _ribbon->Realise();
-        _manager.AddPane(_ribbon, wxAuiPaneInfo().Top().Floatable(false).CaptionVisible(false).CloseButton(false).BestSize(-1, 112).Show(true));
+        _manager.AddPane(_ribbon, wxAuiPaneInfo().Top().Floatable(false).CaptionVisible(false).CloseButton(false).BestSize(_ribbon->GetBestSize()).Show(true));
     }
 
     // Menu
